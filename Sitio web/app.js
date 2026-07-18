@@ -25,47 +25,10 @@ const defaultSchedule = [
   {id:"d13-close",day:"13",time:"16:30",type:"Conferencia de clausura",title:"Conclusiones y clausura institucional",description:"Vicealmirante Roca · Mando Conjunto del Ciberespacio.",panel:null}
 ];
 
-const panels = [
-  {id:1,date:"12 NOV · PANEL 1",title:"Ciberespacio y combate algorítmico",summary:"Cómo las capacidades digitales y automatizadas redefinen la esencia del conflicto moderno.",director:"Cor. Roberto García Arroba · Estado Mayor del Aire",participants:"Representantes del Ministerio de Defensa",topics:[
-    ["¿Evolución o transformación?","El ritmo del cambio tecnológico y su impacto estructural en las fuerzas armadas."],
-    ["Qué es el combate algorítmico","Modelos matemáticos, aprendizaje automático y datos en tiempo real para acelerar el ciclo OODA."],
-    ["Elementos del dominio ciberespacial","Infraestructuras críticas, redes, espectro electromagnético y capas lógicas."],
-    ["De la plataforma a la nube","De sistemas de armas aislados a arquitecturas descentralizadas donde el dato es el activo principal."],
-    ["Integración con operaciones aeroespaciales","Convergencia de acciones ciber, electromagnéticas, aéreas y espaciales."],
-    ["Fortalezas, riesgos y acciones","Balance del nuevo escenario y definición de respuestas prioritarias."]]},
-  {id:2,date:"12 NOV · PANEL 2",title:"Computación y ciberdefensa post-cuántica",summary:"El impacto de la computación cuántica y las redes de nueva generación en la seguridad militar.",director:"Pendiente de designación",participants:"Industria (Indra, Telefónica, EPICOM) y CESTIC",topics:[
-    ["La amenaza cuántica sobre la criptografía","Riesgo para la clave pública y estrategia de cosechar ahora para descifrar después."],
-    ["Distribución de Claves Cuánticas (QKD)","Canales seguros basados en física cuántica y detección de interceptaciones."],
-    ["Redes militares 5G/6G","Conectividad de baja latencia para IoT militar y sensores en tiempo real."],
-    ["IA distribuida y Edge Computing","Procesamiento de datos en sensores, aeronaves y UAV para reducir latencia y ancho de banda."],
-    ["Resiliencia de infraestructuras críticas","Defensa de sistemas de navegación, control industrial y centros de mando ante amenazas avanzadas."],
-    ["Fortalezas, riesgos y acciones","Balance post-cuántico y hoja de ruta de seguridad."]]},
-  {id:3,date:"13 NOV · PANEL 3",title:"Cultura, organización y talento",summary:"El factor humano como componente crítico de la transformación tecnológica.",director:"GD Fernando Carrillo Cremades · GJSTCIBER",participants:"MAPER, DIGENPER, Gartner, Ejército de Tierra, Armada y universidades",topics:[
-    ["Cultura como motor de transformación","Mentalidad adaptativa, innovación, agilidad y pensamiento crítico."],
-    ["Atracción y retención de talento","Carreras profesionales atractivas en ciberdefensa e IA."],
-    ["Upskilling y reskilling","Capacitación continua del combatiente digital y competencias en datos y ciberseguridad."],
-    ["Reserva de especialistas tecnológicos","Integración temporal de profesionales civiles y mejores prácticas internacionales."],
-    ["Liderazgo en entornos transformacionales","Criterio humano, responsabilidad y decisiones asistidas por algoritmos."],
-    ["Fortalezas, riesgos y acciones","Cambios organizativos y prioridades de talento."]]},
-  {id:4,date:"13 NOV · PANEL 4",title:"Ciberoperaciones en conflictos actuales",summary:"Casos contemporáneos, efectividad, límites y lecciones del empleo operacional del ciberespacio.",director:"Especialista del Mando Conjunto del Ciberespacio",participants:"EMACON, MACOM, MCCE y representación OTAN",topics:[
-    ["Ciberoperaciones y operaciones aéreas","Coordinación entre ataques cibernéticos, denegación de servicios y vectores físicos en Irán y otros teatros."],
-    ["DELTA, MAVEN e INDRAMIND","Software comercial, conciencia situacional y fusión de datos civiles-militares."],
-    ["Guerra de información e influencia con IA","Bots, algoritmos de recomendación y contenidos sintéticos para influir en la opinión pública."],
-    ["Fusión de sensores ISR comerciales","Satélites privados e IA para procesar inteligencia geoespacial a gran escala."],
-    ["Drones autónomos y municiones merodeadoras","Enjambres de bajo coste, saturación de defensas y capacidades C-UAS."],
-    ["Fortalezas, riesgos y acciones","Lecciones tácticas y respuestas urgentes."]]},
-  {id:5,date:"13 NOV · PANEL 5",title:"Transformación, gobernanza e interoperabilidad",summary:"Estructuras de mando, estándares y arquitectura de datos para operar en un entorno multidominio.",director:"Pendiente de designación",participants:"CESTIC, EMA/SEGE y representantes OTAN de EE. UU., Alemania, Francia, Italia, Reino Unido y Turquía",topics:[
-    ["Gobernanza del dato militar","Políticas para convertir el dato en un activo estratégico accesible y seguro."],
-    ["Interoperabilidad multidominio OTAN","Compatibilidad, conectividad y agilidad en el intercambio de información de coalición."],
-    ["JADC2 y su traslación europea","Conexión automatizada de sensores y efectores e iniciativas europeas homólogas."],
-    ["Adquisición ágil de software e IA","Contratación adaptada a iteraciones, actualizaciones y despliegues continuos."],
-    ["Certificación y confianza en sistemas autónomos","Seguridad, explicabilidad, ausencia de sesgos y validación operacional."],
-    ["Fortalezas, riesgos y acciones","Prioridades para una transformación aliada e interoperable."]]}
-];
-
 // Estado en memoria
 const store = {
   schedule: defaultSchedule,
+  panels: [],
   attendees: []
 };
 
@@ -78,6 +41,14 @@ async function fetchSchedule() {
   const { data, error } = await db.from('schedule').select('*').order('time');
   if (!error && data && data.length > 0) {
     store.schedule = data;
+  }
+}
+
+async function fetchPanels() {
+  if (!db) return;
+  const { data, error } = await db.from('panels').select('*').order('id');
+  if (!error && data && data.length > 0) {
+    store.panels = data;
   }
 }
 
@@ -94,8 +65,8 @@ async function renderSchedule(){
   qs("#day-panel").innerHTML=items.map(item=>`<article class="timeline-item"><time class="timeline-time">${escapeHTML(item.time)}</time><div><span class="timeline-type">${escapeHTML(item.type)}</span><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>${item.panel?`<button type="button" data-panel="${item.panel}">Ver panel →</button>`:""}</article>`).join("")||'<p class="empty-state">No hay actividades programadas.</p>';
 }
 
-function renderPanelCards(){qs("#panel-grid").innerHTML=panels.map(p=>`<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${p.title}</h3><p>${p.summary}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`).join("")}
-function openPanel(id){const p=panels.find(x=>x.id===Number(id));if(!p)return;qs("#detail-content").innerHTML=`<p class="eyebrow">${p.date}</p><h2>${p.title}</h2><p class="detail-intro">${p.summary}</p><div class="detail-meta"><strong>Dirección:</strong> ${p.director}<br><strong>Participantes:</strong> ${p.participants}</div><h3>Temas de análisis</h3><ol class="topic-list">${p.topics.map(t=>`<li><strong>${t[0]}</strong><p>${t[1]}</p></li>`).join("")}</ol>`;qs("#detail-modal").showModal()}
+function renderPanelCards(){qs("#panel-grid").innerHTML=store.panels.map(p=>`<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${p.title}</h3><p>${p.summary}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`).join("")}
+function openPanel(id){const p=store.panels.find(x=>x.id===Number(id));if(!p)return;qs("#detail-content").innerHTML=`<p class="eyebrow">${p.date}</p><h2>${p.title}</h2><p class="detail-intro">${p.summary}</p><div class="detail-meta"><strong>Dirección:</strong> ${p.director}<br><strong>Participantes:</strong> ${p.participants}</div><h3>Temas de análisis</h3><ol class="topic-list">${p.topics.map(t=>`<li><strong>${escapeHTML(t[0])}</strong><p>${escapeHTML(t[1])}</p></li>`).join("")}</ol>`;qs("#detail-modal").showModal()}
 function showToast(message){const toast=qs("#toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),4200)}
 function generateCode(){return "EA26-"+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6).padStart(6,"0")}
 
@@ -166,12 +137,14 @@ async function openAdmin(){
   if(adminAuthenticated){
     await fetchAttendees();
     renderAdminActivities();
+    renderAdminPanels();
     renderAdminAttendees();
   }
   qs("#admin-modal").showModal();
 }
 
 function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
+function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label>Temas de análisis (Formato JSON Estricto)<textarea name="topics" required style="font-family:monospace;height:220px">${escapeHTML(JSON.stringify(p.topics, null, 2))}</textarea><small style="opacity:0.7">Debe ser un array de arrays. Ejemplo: <code>[ ["Título 1", "Desc 1"], ["Título 2", "Desc 2"] ]</code></small></label><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
 function renderAdminAttendees(){const data=store.attendees;qs("#attendee-count").textContent=data.length;qs("#admin-attendees").innerHTML=data.length?`<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`:'<p class="empty-state">Todavía no se ha recibido ninguna inscripción.</p>'}
 
 qsa("[data-day]").forEach(button=>button.addEventListener("click",()=>{selectedDay=button.dataset.day;qsa("[data-day]").forEach(b=>b.setAttribute("aria-selected",String(b===button)));renderSchedule()}));
@@ -199,6 +172,7 @@ qs("#admin-login").addEventListener("submit", async e=>{
     qs("#admin-dashboard").hidden=false;
     await fetchAttendees();
     renderAdminActivities();
+    renderAdminPanels();
     renderAdminAttendees();
   }
 });
@@ -211,24 +185,50 @@ qs("#admin-logout").addEventListener("click", async ()=>{
   qs("#admin-login").reset();
 });
 
-qs("#admin-dashboard").addEventListener("click",e=>{const edit=e.target.closest("[data-edit]");if(edit){const form=qs(`[data-edit-form="${CSS.escape(edit.dataset.edit)}"]`);form.hidden=!form.hidden}const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees"}});
+qs("#admin-dashboard").addEventListener("click",e=>{
+  const edit=e.target.closest("[data-edit]");if(edit){const form=qs(`[data-edit-form="${CSS.escape(edit.dataset.edit)}"]`);form.hidden=!form.hidden}
+  const editPanel=e.target.closest("[data-edit-panel]");if(editPanel){const form=qs(`[data-edit-panel-form="${CSS.escape(editPanel.dataset.editPanel)}"]`);form.hidden=!form.hidden}
+  const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-panels").hidden=tab.dataset.adminTab!=="panels";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees"}
+});
 
 qs("#admin-dashboard").addEventListener("submit", async e=>{
-  const form=e.target.closest("[data-edit-form]");
+  const form=e.target.closest("form");
   if(!form)return;
   e.preventDefault();
   const data=Object.fromEntries(new FormData(form));
   
-  if (db) {
-    const { error } = await db.from('schedule').update(data).eq('id', form.dataset.editForm);
-    if (!error) {
-      await fetchSchedule();
-      renderSchedule();
-      renderAdminActivities();
-      showToast("Actividad actualizada correctamente.");
-      form.hidden = true;
-    } else {
-      showToast("Error al actualizar la actividad.");
+  if (form.matches("[data-edit-form]")) {
+    if (db) {
+      const { error } = await db.from('schedule').update(data).eq('id', form.dataset.editForm);
+      if (!error) {
+        await fetchSchedule();
+        renderSchedule();
+        renderAdminActivities();
+        showToast("Actividad actualizada correctamente.");
+        form.hidden = true;
+      } else {
+        showToast("Error al actualizar la actividad.");
+      }
+    }
+  } else if (form.matches("[data-edit-panel-form]")) {
+    if (db) {
+      try {
+        data.topics = JSON.parse(data.topics);
+        if (!Array.isArray(data.topics)) throw new Error("Debe ser un array");
+      } catch (err) {
+        showToast("Error: El formato de los temas JSON es inválido.");
+        return;
+      }
+      const { error } = await db.from('panels').update(data).eq('id', form.dataset.editPanelForm);
+      if (!error) {
+        await fetchPanels();
+        renderPanelCards();
+        renderAdminPanels();
+        showToast("Panel actualizado correctamente.");
+        form.hidden = true;
+      } else {
+        showToast("Error al actualizar el panel.");
+      }
     }
   }
 });
@@ -247,7 +247,7 @@ qs("#admin-dashboard").addEventListener("change", async e=>{
 });
 
 async function init() {
-  await fetchSchedule();
+  await Promise.all([fetchSchedule(), fetchPanels()]);
   renderSchedule();
   renderPanelCards();
 }
