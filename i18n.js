@@ -276,7 +276,13 @@
     "Panel 2":"Panel 2",
     "Panel 3":"Panel 3",
     "Panel 4":"Panel 4",
-    "Panel 5":"Panel 5"
+    "Panel 5":"Panel 5",
+    "Ciberespacio y transición al  combate algorítmico":"Cyberspace and the transition to algorithmic warfare",
+    "Director: TBD, EMA":"Lead: TBD, Air Staff",
+    "Director: TBD · GJSTCIBER.":"Lead: TBD · GJSTCIBER.",
+    "TBD · Mando Conjunto del Ciberespacio.":"TBD · Joint Cyberspace Command.",
+    "Adaptación organizativa y cultural al dominio ciberespacial y a la IA. Director: TBD":"Organisational and cultural adaptation to the cyberspace domain and AI. Lead: TBD",
+    "Dirección: especialista del Mando Conjunto del Ciberespacio. MCCE":"Lead: specialist from the Joint Cyberspace Command. MCCE"
   };
 
   const EN_ES=Object.fromEntries(Object.entries(ES_EN).map(([es,en])=>[en,es]));
@@ -332,7 +338,7 @@
   }
 
   document.querySelectorAll("[data-language]").forEach(button=>button.addEventListener("click",()=>setLanguage(button.dataset.language)));
-  const observer=new MutationObserver(records=>{if(translating||current!=="en")return;records.forEach(record=>record.addedNodes.forEach(node=>translateTree(node,"en")))});
+  const observer=new MutationObserver(records=>{if(translating)return;records.forEach(record=>record.addedNodes.forEach(node=>translateTree(node,current)))});
   observer.observe(document.body,{childList:true,subtree:true});
   setLanguage(current);
 
