@@ -373,7 +373,7 @@ window.exportAttendeesToExcel = function() {
     "Alergias": a.registration_details?.allergies || "", "Visita Social": a.registration_details?.visit === "Yes" ? "Sí" : "No",
     "Acompañante": a.registration_details?.companion || ""
   }));
-  const publico = store.attendees.filter(a => a.attendance_type === "public").map(a => ({
+  const publico = store.attendees.filter(a => a.attendance_type !== "panel").map(a => ({
     "Nombre": a.name, "Organismo": a.organization, "Cargo": a.role, "Email": a.email, "Teléfono": a.phone,
     "Código": a.code, "Estado": a.status, "Conclusiones GT": a.registration_details?.activity_gt === "Yes" ? "Sí" : "No",
     "Panel 1": a.registration_details?.activity_p1 === "Yes" ? "Sí" : "No",
@@ -410,7 +410,7 @@ window.exportAttendeesToPDF = function() {
     finalY = doc.lastAutoTable.finalY;
   }
   
-  const pubRows = store.attendees.filter(a => a.attendance_type === "public").map(a => [
+  const pubRows = store.attendees.filter(a => a.attendance_type !== "panel").map(a => [
     a.name, a.organization, a.role, a.email, a.phone, a.status
   ]);
   
