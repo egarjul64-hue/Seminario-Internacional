@@ -260,7 +260,23 @@
     "Ver detalles":"View details",
     "Detalles de Inscripción":"Registration Details",
     "Asistencia":"Attendance",
-    "Participante en paneles":"Panel participant"
+    "Participante en paneles":"Panel participant",
+    "Conclusiones de los grupos de trabajo":"Working group conclusions",
+    "11 NOV":"11 NOV",
+    "12 NOV":"12 NOV",
+    "13 NOV":"13 NOV",
+    "Llegada (DTG)":"Arrival (DTG)",
+    "Salida (DTG)":"Departure (DTG)",
+    "Alojamiento (Residencia)":"Lodging (Residence)",
+    "Alojamiento Residencia":"Lodging (Residence)",
+    "Alergias":"Allergies",
+    "Visita Social":"Social Visit",
+    "Conclusiones GT":"WG Conclusions",
+    "Panel 1":"Panel 1",
+    "Panel 2":"Panel 2",
+    "Panel 3":"Panel 3",
+    "Panel 4":"Panel 4",
+    "Panel 5":"Panel 5"
   };
 
   const EN_ES=Object.fromEntries(Object.entries(ES_EN).map(([es,en])=>[en,es]));
