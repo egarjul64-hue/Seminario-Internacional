@@ -233,7 +233,7 @@
     "Estado de inscripción actualizado.":"Registration status updated.",
     "Datos Personales":"Personal Data",
     "Modalidad de Asistencia":"Attendance Type",
-    "Asistente a los paneles":"Panel participant",
+    "Participante en los paneles":"Panel participant",
     "Público general":"General public",
     "Detalles para Participantes":"Participant Details",
     "Empleo / Rango":"Rank",
@@ -260,7 +260,36 @@
     "Ver detalles":"View details",
     "Detalles de Inscripción":"Registration Details",
     "Asistencia":"Attendance",
-    "Participante en paneles":"Panel participant"
+    "Participante en paneles":"Panel participant",
+    "Conclusiones de los grupos de trabajo":"Working group conclusions",
+    "11 NOV":"11 NOV",
+    "12 NOV":"12 NOV",
+    "13 NOV":"13 NOV",
+    "Llegada (DTG)":"Arrival (DTG)",
+    "Salida (DTG)":"Departure (DTG)",
+    "Alojamiento (Residencia)":"Lodging (Residence)",
+    "Alojamiento Residencia":"Lodging (Residence)",
+    "Alergias":"Allergies",
+    "Visita Social":"Social Visit",
+    "Conclusiones GT":"WG Conclusions",
+    "Panel 1":"Panel 1",
+    "Panel 2":"Panel 2",
+    "Panel 3":"Panel 3",
+    "Panel 4":"Panel 4",
+    "Panel 5":"Panel 5",
+    "Ciberespacio y transición al  combate algorítmico":"Cyberspace and the transition to algorithmic warfare",
+    "Director: TBD, EMA":"Lead: TBD, Air Staff",
+    "Director: TBD · GJSTCIBER.":"Lead: TBD · GJSTCIBER.",
+    "TBD · Mando Conjunto del Ciberespacio.":"TBD · Joint Cyberspace Command.",
+    "Adaptación organizativa y cultural al dominio ciberespacial y a la IA. Director: TBD":"Organisational and cultural adaptation to the cyberspace domain and AI. Lead: TBD",
+    "Dirección: especialista del Mando Conjunto del Ciberespacio. MCCE":"Lead: specialist from the Joint Cyberspace Command. MCCE",
+    "Administradores":"Administrators",
+    "Nuevo Administrador":"New Administrator",
+    "Añadir un nuevo usuario con permisos de acceso a este panel.":"Add a new user with access permissions to this panel.",
+    "Palabra clave (mín. 6 caracteres)":"Password (min. 6 characters)",
+    "Crear Administrador":"Create Administrator",
+    "Error al crear administrador: ":"Error creating administrator: ",
+    "Administrador creado correctamente.":"Administrator created successfully."
   };
 
   const EN_ES=Object.fromEntries(Object.entries(ES_EN).map(([es,en])=>[en,es]));
@@ -316,7 +345,7 @@
   }
 
   document.querySelectorAll("[data-language]").forEach(button=>button.addEventListener("click",()=>setLanguage(button.dataset.language)));
-  const observer=new MutationObserver(records=>{if(translating||current!=="en")return;records.forEach(record=>record.addedNodes.forEach(node=>translateTree(node,"en")))});
+  const observer=new MutationObserver(records=>{if(translating)return;records.forEach(record=>record.addedNodes.forEach(node=>translateTree(node,current)))});
   observer.observe(document.body,{childList:true,subtree:true});
   setLanguage(current);
 
