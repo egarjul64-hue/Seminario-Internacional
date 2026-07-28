@@ -289,7 +289,9 @@
     "Palabra clave (mín. 6 caracteres)":"Password (min. 6 characters)",
     "Crear Administrador":"Create Administrator",
     "Error al crear administrador: ":"Error creating administrator: ",
-    "Administrador creado correctamente.":"Administrator created successfully."
+    "Administrador creado correctamente.":"Administrator created successfully.",
+    "Exportar a Excel":"Export to Excel",
+    "Exportar a PDF":"Export to PDF"
   };
 
   const EN_ES=Object.fromEntries(Object.entries(ES_EN).map(([es,en])=>[en,es]));
