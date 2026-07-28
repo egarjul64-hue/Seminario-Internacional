@@ -267,7 +267,7 @@ qs("#admin-logout").addEventListener("click", async ()=>{
 qs("#admin-dashboard").addEventListener("click",e=>{
   const edit=e.target.closest("[data-edit]");if(edit){const form=qs(`[data-edit-form="${CSS.escape(edit.dataset.edit)}"]`);form.hidden=!form.hidden}
   const editPanel=e.target.closest("[data-edit-panel]");if(editPanel){const form=qs(`[data-edit-panel-form="${CSS.escape(editPanel.dataset.editPanel)}"]`);form.hidden=!form.hidden}
-  const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-panels").hidden=tab.dataset.adminTab!=="panels";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees"}
+  const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-panels").hidden=tab.dataset.adminTab!=="panels";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees";qs("#admin-users").hidden=tab.dataset.adminTab!=="users"}
 });
 
 qs("#admin-dashboard").addEventListener("submit", async e=>{
@@ -322,6 +322,25 @@ qs("#admin-dashboard").addEventListener("change", async e=>{
     } else {
       showToast("Error al actualizar el estado.");
     }
+  }
+});
+
+qs("#admin-create-user")?.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const form = e.currentTarget;
+  const data = Object.fromEntries(new FormData(form));
+  if (!db) return;
+  
+  const { error } = await db.auth.signUp({
+    email: data.email,
+    password: data.password
+  });
+
+  if (error) {
+    showToast("Error al crear administrador: " + error.message);
+  } else {
+    showToast("Administrador creado correctamente.");
+    form.reset();
   }
 });
 

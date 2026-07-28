@@ -252,10 +252,25 @@
     </div>
     <div id="admin-dashboard" hidden>
       <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administración</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesión</button></div>
-      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button></div>
+      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Administradores</button></div>
       <div id="admin-activities"></div>
       <div id="admin-panels" hidden></div>
       <div id="admin-attendees" hidden></div>
+      <div id="admin-users" hidden>
+        <div class="admin-list" style="padding:20px;">
+          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Nuevo Administrador</h3>
+              <p style="margin:0;color:#556270;font-size:0.9em;">Añadir un nuevo usuario con permisos de acceso a este panel.</p>
+            </div>
+            <form id="admin-create-user" class="stack-form" style="max-width:400px;">
+              <label>Correo electrónico<input name="email" type="email" autocomplete="off" required></label>
+              <label>Palabra clave (mín. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+              <button class="button button-gold" type="submit" style="margin-top:8px;">Crear Administrador</button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </dialog>
 

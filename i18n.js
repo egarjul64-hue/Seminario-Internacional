@@ -282,7 +282,14 @@
     "Director: TBD · GJSTCIBER.":"Lead: TBD · GJSTCIBER.",
     "TBD · Mando Conjunto del Ciberespacio.":"TBD · Joint Cyberspace Command.",
     "Adaptación organizativa y cultural al dominio ciberespacial y a la IA. Director: TBD":"Organisational and cultural adaptation to the cyberspace domain and AI. Lead: TBD",
-    "Dirección: especialista del Mando Conjunto del Ciberespacio. MCCE":"Lead: specialist from the Joint Cyberspace Command. MCCE"
+    "Dirección: especialista del Mando Conjunto del Ciberespacio. MCCE":"Lead: specialist from the Joint Cyberspace Command. MCCE",
+    "Administradores":"Administrators",
+    "Nuevo Administrador":"New Administrator",
+    "Añadir un nuevo usuario con permisos de acceso a este panel.":"Add a new user with access permissions to this panel.",
+    "Palabra clave (mín. 6 caracteres)":"Password (min. 6 characters)",
+    "Crear Administrador":"Create Administrator",
+    "Error al crear administrador: ":"Error creating administrator: ",
+    "Administrador creado correctamente.":"Administrator created successfully."
   };
 
   const EN_ES=Object.fromEntries(Object.entries(ES_EN).map(([es,en])=>[en,es]));
