@@ -75,6 +75,29 @@ async function register(form){
   if (!db) { showToast("Error: Configura Supabase en app.js"); return; }
   
   const code = generateCode();
+  
+  // Extraer los campos específicos a details
+  const attendanceType = data.attendance_type;
+  const details = {};
+  
+  if (attendanceType === "panel") {
+    details.rank = data.rank?.trim() || "";
+    details.passport = data.passport?.trim() || "";
+    details.arrival_dtg = data.arrival_dtg || "";
+    details.departure_dtg = data.departure_dtg || "";
+    details.lodging = data.lodging ? "Yes" : "No";
+    details.allergies = data.allergies?.trim() || "";
+    details.visit = data.visit || "";
+    details.companion = data.companion?.trim() || "";
+  } else if (attendanceType === "public") {
+    details.activity_gt = data.activity_gt ? "Yes" : "No";
+    details.activity_p1 = data.activity_p1 ? "Yes" : "No";
+    details.activity_p2 = data.activity_p2 ? "Yes" : "No";
+    details.activity_p3 = data.activity_p3 ? "Yes" : "No";
+    details.activity_p4 = data.activity_p4 ? "Yes" : "No";
+    details.activity_p5 = data.activity_p5 ? "Yes" : "No";
+  }
+
   const attendee = {
     name:data.name.trim(),
     role:data.role.trim(),
@@ -82,7 +105,9 @@ async function register(form){
     email:data.email.trim(),
     phone:data.phone.trim(),
     status:"En proceso",
-    code:code
+    code:code,
+    attendance_type: attendanceType,
+    registration_details: details
   };
 
   const { error } = await db.from('attendees').insert([attendee]);
@@ -92,6 +117,8 @@ async function register(form){
     console.error(error);
   } else {
     form.reset();
+    qs("#section-panel").hidden = true;
+    qs("#section-public").hidden = true;
     showToast(`Solicitud registrada. Guarde su código de acceso: ${code}`);
     if(adminAuthenticated) {
       await fetchAttendees();
@@ -121,7 +148,19 @@ async function attendeeLogin(form){
 function renderProfile(a){
   const statusClass=a.status==="Autorizada"?"authorized":a.status==="Denegada"?"denied":"";
   const el=qs("#attendee-profile");el.hidden=false;
-  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div></div></div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
+  
+  let detailsHTML = "";
+  if (a.attendance_type === "panel") {
+    detailsHTML = `<div><span>Asistencia</span><strong>Participante en paneles</strong></div>
+    <div><span>Empleo / Rango</span><strong>${escapeHTML(a.registration_details?.rank)}</strong></div>
+    <div><span>Llegada (DTG)</span><strong>${escapeHTML(a.registration_details?.arrival_dtg)}</strong></div>
+    <div><span>Salida (DTG)</span><strong>${escapeHTML(a.registration_details?.departure_dtg)}</strong></div>
+    <div><span>Alojamiento Residencia</span><strong>${escapeHTML(a.registration_details?.lodging==="Yes"?"Sí":"No")}</strong></div>`;
+  } else if (a.attendance_type === "public") {
+    detailsHTML = `<div><span>Asistencia</span><strong>Público general</strong></div>`;
+  }
+  
+  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div>${detailsHTML}</div></div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
   qs("#profile-exit").onclick=()=>{el.hidden=true;qs("#attendee-login").hidden=false;qs("#attendee-login").reset()}
 }
 
@@ -145,14 +184,54 @@ async function openAdmin(){
 
 function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
 function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label>Temas de análisis (Formato JSON Estricto)<textarea name="topics" required style="font-family:monospace;height:220px">${escapeHTML(JSON.stringify(p.topics, null, 2))}</textarea><small style="opacity:0.7">Debe ser un array de arrays. Ejemplo: <code>[ ["Título 1", "Desc 1"], ["Título 2", "Desc 2"] ]</code></small></label><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
-function renderAdminAttendees(){const data=store.attendees;qs("#attendee-count").textContent=data.length;qs("#admin-attendees").innerHTML=data.length?`<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`:'<p class="empty-state">Todavía no se ha recibido ninguna inscripción.</p>'}
+function renderAdminAttendees(){const data=store.attendees;qs("#attendee-count").textContent=data.length;qs("#admin-attendees").innerHTML=data.length?`<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`:'<p class="empty-state">Todavía no se ha recibido ninguna inscripción.</p>'}
 
 qsa("[data-day]").forEach(button=>button.addEventListener("click",()=>{selectedDay=button.dataset.day;qsa("[data-day]").forEach(b=>b.setAttribute("aria-selected",String(b===button)));renderSchedule()}));
-document.addEventListener("click",e=>{const panelButton=e.target.closest("[data-panel]");if(panelButton)openPanel(panelButton.dataset.panel);const opener=e.target.closest("[data-open]");if(opener){if(opener.dataset.open==="admin-modal")openAdmin();else qs(`#${opener.dataset.open}`).showModal()}const closer=e.target.closest("[data-close]");if(closer)closer.closest("dialog").close()});
+document.addEventListener("click",e=>{
+  const panelButton=e.target.closest("[data-panel]");if(panelButton)openPanel(panelButton.dataset.panel);
+  const opener=e.target.closest("[data-open]");if(opener){if(opener.dataset.open==="admin-modal")openAdmin();else qs(`#${opener.dataset.open}`).showModal()}
+  const closer=e.target.closest("[data-close]");if(closer)closer.closest("dialog").close();
+  const detailsBtn=e.target.closest("[data-details]");if(detailsBtn){e.preventDefault();showAttendeeDetails(Number(detailsBtn.dataset.details));}
+});
 qsa("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
 qs(".menu-toggle").addEventListener("click",e=>{const open=qs("#nav-links").classList.toggle("open");e.currentTarget.setAttribute("aria-expanded",String(open))});qsa("#nav-links a").forEach(a=>a.addEventListener("click",()=>qs("#nav-links").classList.remove("open")));
 qs("#registration-form").addEventListener("submit",e=>{e.preventDefault();register(e.currentTarget)});
 qs("#attendee-login").addEventListener("submit",e=>{e.preventDefault();attendeeLogin(e.currentTarget)});
+
+// Toggle dynamic form sections
+qs("#registration-form").addEventListener("change", e => {
+  if(e.target.name === "attendance_type") {
+    qs("#section-panel").hidden = e.target.value !== "panel";
+    qs("#section-public").hidden = e.target.value !== "public";
+  }
+});
+
+function showAttendeeDetails(id) {
+  const a = store.attendees.find(x => x.id === id);
+  if(!a) return;
+  const d = a.registration_details || {};
+  let content = `<h2>Detalles de Inscripción</h2><p class="eyebrow">${escapeHTML(a.name)} - ${a.attendance_type==="panel"?"Participante":"Público general"}</p><div class="profile-grid">`;
+  if (a.attendance_type === "panel") {
+    content += `<div><span>Empleo / Rango</span><strong>${escapeHTML(d.rank)}</strong></div>
+                <div><span>DNI / Pasaporte</span><strong>${escapeHTML(d.passport)}</strong></div>
+                <div><span>Llegada (DTG)</span><strong>${escapeHTML(d.arrival_dtg)}</strong></div>
+                <div><span>Salida (DTG)</span><strong>${escapeHTML(d.departure_dtg)}</strong></div>
+                <div><span>Alojamiento (Residencia)</span><strong>${d.lodging==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Alergias</span><strong>${escapeHTML(d.allergies)}</strong></div>
+                <div><span>Visita Social</span><strong>${escapeHTML(d.visit)}</strong></div>
+                <div><span>Acompañante</span><strong>${escapeHTML(d.companion)}</strong></div>`;
+  } else {
+    content += `<div><span>Conclusiones GT</span><strong>${d.activity_gt==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Panel 1</span><strong>${d.activity_p1==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Panel 2</span><strong>${d.activity_p2==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Panel 3</span><strong>${d.activity_p3==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Panel 4</span><strong>${d.activity_p4==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Panel 5</span><strong>${d.activity_p5==="Yes"?"Sí":"No"}</strong></div>`;
+  }
+  content += `</div>`;
+  qs("#detail-content").innerHTML = content;
+  qs("#detail-modal").showModal();
+}
 
 qs("#admin-login").addEventListener("submit", async e=>{
   e.preventDefault();

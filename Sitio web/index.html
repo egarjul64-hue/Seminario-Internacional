@@ -145,16 +145,65 @@
           <ul class="check-list"><li>Solicitud sujeta a validación</li><li>Acceso personal a su expediente</li><li>Comunicación del estado de inscripción</li></ul>
         </div>
         <form class="registration-form" id="registration-form">
+          <h3 class="form-section-title">Datos Personales</h3>
           <div class="field-row">
             <label>Nombre y apellidos<input name="name" autocomplete="name" required></label>
+            <label>Correo electrónico<input name="email" type="email" autocomplete="email" required></label>
+          </div>
+          <div class="field-row">
+            <label>Organismo al que representa<input name="organization" autocomplete="organization" required></label>
             <label>Cargo en la organización<input name="role" required></label>
           </div>
-          <label>Organismo al que representa<input name="organization" autocomplete="organization" required></label>
           <div class="field-row">
-            <label>Correo electrónico<input name="email" type="email" autocomplete="email" required></label>
             <label>Teléfono<input name="phone" type="tel" autocomplete="tel" required></label>
           </div>
-          <label class="consent"><input name="consent" type="checkbox" required><span>Acepto que mis datos se utilicen para gestionar mi solicitud de participación en el seminario.</span></label>
+          
+          <h3 class="form-section-title" style="margin-top:20px;">Modalidad de Asistencia</h3>
+          <div class="field-row" style="margin-bottom:15px;">
+            <label class="consent"><input type="radio" name="attendance_type" value="panel" required><span>Asistente a los paneles</span></label>
+            <label class="consent"><input type="radio" name="attendance_type" value="public" required><span>Público general</span></label>
+          </div>
+
+          <!-- Section for Panel Participants -->
+          <div class="conditional-section" id="section-panel" hidden style="background:var(--paper);padding:20px;margin-bottom:20px;border-radius:4px;">
+            <h3 class="form-section-title" style="margin-top:0;">Detalles para Participantes</h3>
+            <div class="field-row">
+              <label>Empleo / Rango<input name="rank"></label>
+              <label>DNI / Pasaporte<input name="passport"></label>
+            </div>
+            <div class="field-row">
+              <label>Fecha y hora de llegada (DTG)<input name="arrival_dtg" type="datetime-local"></label>
+              <label>Fecha y hora de salida (DTG)<input name="departure_dtg" type="datetime-local"></label>
+            </div>
+            <label class="consent" style="margin-bottom:20px;"><input type="checkbox" name="lodging" value="Yes"><span>Se alojará en la residencia militar recomendada</span></label>
+            <label style="margin-bottom:20px;">Alergias o condiciones particulares<input name="allergies"></label>
+            <div class="field-row">
+              <label>Visita programa social
+                <select name="visit" style="width:100%;border:1px solid #c8d0da;background:#fff;padding:12px;color:var(--ink);outline:none;">
+                  <option value="">Seleccionar...</option>
+                  <option value="Yes">Sí</option>
+                  <option value="No">No</option>
+                </select>
+              </label>
+              <label>Acompañante<input name="companion"></label>
+            </div>
+          </div>
+
+          <!-- Section for General Public -->
+          <div class="conditional-section" id="section-public" hidden style="background:var(--paper);padding:20px;margin-bottom:20px;border-radius:4px;">
+            <h3 class="form-section-title" style="margin-top:0;">Asistencia a Actividades</h3>
+            <p class="form-note" style="margin-top:0;margin-bottom:15px;">Indique a qué actividades tiene previsto asistir:</p>
+            <div style="display:grid;gap:12px;">
+              <label class="consent"><input type="checkbox" name="activity_gt" value="Yes"><span><strong>11 NOV</strong> · Conclusiones de los grupos de trabajo</span></label>
+              <label class="consent"><input type="checkbox" name="activity_p1" value="Yes"><span><strong>12 NOV</strong> · Panel 1: Ciberespacio y combate algorítmico</span></label>
+              <label class="consent"><input type="checkbox" name="activity_p2" value="Yes"><span><strong>12 NOV</strong> · Panel 2: Ciberdefensa post-cuántica</span></label>
+              <label class="consent"><input type="checkbox" name="activity_p3" value="Yes"><span><strong>13 NOV</strong> · Panel 3: Cultura, organización y talento</span></label>
+              <label class="consent"><input type="checkbox" name="activity_p4" value="Yes"><span><strong>13 NOV</strong> · Panel 4: Ciberoperaciones en conflictos actuales</span></label>
+              <label class="consent"><input type="checkbox" name="activity_p5" value="Yes"><span><strong>13 NOV</strong> · Panel 5: Transformación e interoperabilidad</span></label>
+            </div>
+          </div>
+
+          <label class="consent" style="margin-bottom:20px;"><input name="consent" type="checkbox" required><span>Acepto que mis datos se utilicen para gestionar mi solicitud de participación en el seminario.</span></label>
           <button class="button button-gold" type="submit">Enviar solicitud</button>
           <p class="form-note">Los campos son obligatorios. Este prototipo guarda los datos únicamente en este navegador.</p>
         </form>
