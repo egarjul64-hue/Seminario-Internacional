@@ -96,6 +96,7 @@ async function register(form){
     details.activity_p3 = data.activity_p3 ? "Yes" : "No";
     details.activity_p4 = data.activity_p4 ? "Yes" : "No";
     details.activity_p5 = data.activity_p5 ? "Yes" : "No";
+    details.activity_close = data.activity_close ? "Yes" : "No";
   }
 
   const attendee = {
@@ -183,7 +184,7 @@ async function openAdmin(){
 }
 
 function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
-function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label>Temas de análisis (Formato JSON Estricto)<textarea name="topics" required style="font-family:monospace;height:220px">${escapeHTML(JSON.stringify(p.topics, null, 2))}</textarea><small style="opacity:0.7">Debe ser un array de arrays. Ejemplo: <code>[ ["Título 1", "Desc 1"], ["Título 2", "Desc 2"] ]</code></small></label><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
+function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label style="margin-bottom:8px">Temas de análisis</label><div data-idx="${p.topics.length}">${p.topics.map((t,i)=>`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold" title="Eliminar tema">X</button><input name="topic_title_${i}" placeholder="Título del tema" value="${escapeHTML(t[0]||'')}" style="margin-right:20px"><textarea name="topic_desc_${i}" placeholder="Descripción del tema">${escapeHTML(t[1]||'')}</textarea></div>`).join("")}</div><button type="button" onclick="const d=this.previousElementSibling;const i=parseInt(d.dataset.idx);d.dataset.idx=i+1;const n=document.createElement('div');n.style.cssText='display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative';n.innerHTML='<button type=\\'button\\' onclick=\\'this.parentElement.remove()\\' style=\\'position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold\\' title=\\'Eliminar tema\\'>X</button><input name=\\'topic_title_'+i+'\\' placeholder=\\'Título del tema\\' style=\\'margin-right:20px\\'><textarea name=\\'topic_desc_'+i+'\\' placeholder=\\'Descripción del tema\\'></textarea>';d.appendChild(n)" style="margin-bottom:15px;padding:6px 12px;font-size:14px;background:none;border:1px dashed var(--blue);color:var(--blue);cursor:pointer;border-radius:4px;">+ Añadir Tema</button><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
 function renderAdminAttendees(){
   const data=store.attendees;
   qs("#attendee-count").textContent=data.length;
@@ -239,7 +240,8 @@ function showAttendeeDetails(id) {
                 <div><span>Panel 2</span><strong>${d.activity_p2==="Yes"?"Sí":"No"}</strong></div>
                 <div><span>Panel 3</span><strong>${d.activity_p3==="Yes"?"Sí":"No"}</strong></div>
                 <div><span>Panel 4</span><strong>${d.activity_p4==="Yes"?"Sí":"No"}</strong></div>
-                <div><span>Panel 5</span><strong>${d.activity_p5==="Yes"?"Sí":"No"}</strong></div>`;
+                <div><span>Panel 5</span><strong>${d.activity_p5==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Clausura</span><strong>${d.activity_close==="Yes"?"Sí":"No"}</strong></div>`;
   }
   content += `</div>`;
   qs("#detail-content").innerHTML = content;
@@ -304,13 +306,17 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
     }
   } else if (form.matches("[data-edit-panel-form]")) {
     if (db) {
-      try {
-        data.topics = JSON.parse(data.topics);
-        if (!Array.isArray(data.topics)) throw new Error("Debe ser un array");
-      } catch (err) {
-        showToast("Error: El formato de los temas JSON es inválido.");
-        return;
-      }
+      const topicsArray = [];
+      const keys = Object.keys(data).filter(k => k.startsWith("topic_title_"));
+      keys.forEach(k => {
+        const idx = k.replace("topic_title_", "");
+        const title = data[k].trim();
+        const desc = data[`topic_desc_${idx}`]?.trim() || "";
+        if (title) topicsArray.push([title, desc]);
+        delete data[k];
+        delete data[`topic_desc_${idx}`];
+      });
+      data.topics = topicsArray;
       const { error } = await db.from('panels').update(data).eq('id', form.dataset.editPanelForm);
       if (!error) {
         await fetchPanels();
@@ -380,7 +386,8 @@ window.exportAttendeesToExcel = function() {
     "Panel 2": a.registration_details?.activity_p2 === "Yes" ? "Sí" : "No",
     "Panel 3": a.registration_details?.activity_p3 === "Yes" ? "Sí" : "No",
     "Panel 4": a.registration_details?.activity_p4 === "Yes" ? "Sí" : "No",
-    "Panel 5": a.registration_details?.activity_p5 === "Yes" ? "Sí" : "No"
+    "Panel 5": a.registration_details?.activity_p5 === "Yes" ? "Sí" : "No",
+    "Clausura": a.registration_details?.activity_close === "Yes" ? "Sí" : "No"
   }));
   
   const wb = XLSX.utils.book_new();
