@@ -31,6 +31,7 @@ const store = {
   panels: [],
   attendees: []
 };
+const SUPER_ADMIN_EMAIL = "egjulian@hotmail.com"; // Cambia esto por tu correo real de administrador
 
 const escapeHTML = value => String(value ?? "").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const qs=(s,c=document)=>c.querySelector(s);const qsa=(s,c=document)=>[...c.querySelectorAll(s)];
@@ -264,6 +265,17 @@ qs("#admin-login").addEventListener("submit", async e=>{
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
     qs("#admin-dashboard").hidden=false;
+    
+    // Check super admin for users tab
+    const usersTab = qs('[data-admin-tab="users"]');
+    if (usersTab) {
+      if (data.user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+        usersTab.style.display = "";
+      } else {
+        usersTab.style.display = "none";
+      }
+    }
+
     await fetchAttendees();
     renderAdminActivities();
     renderAdminPanels();
