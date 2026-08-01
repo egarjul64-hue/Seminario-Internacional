@@ -39,9 +39,12 @@ let selectedDay="10";let adminAuthenticated=false;
 
 async function fetchSchedule() {
   if (!db) return;
-  const { data, error } = await db.from('schedule').select('*').order('time');
+  const { data, error } = await db.from('schedule').select('*');
   if (!error && data && data.length > 0) {
-    store.schedule = data;
+    store.schedule = data.sort((a,b) => {
+      if (a.day !== b.day) return a.day.localeCompare(b.day);
+      return a.time.localeCompare(b.time);
+    });
   }
 }
 
@@ -62,8 +65,14 @@ async function fetchAttendees() {
 }
 
 async function renderSchedule(){
+  const isEn = window.currentLang === 'en';
   const items=store.schedule.filter(item=>item.day===selectedDay);
-  qs("#day-panel").innerHTML=items.map(item=>`<article class="timeline-item"><time class="timeline-time">${escapeHTML(item.time)}</time><div><span class="timeline-type">${escapeHTML(item.type)}</span><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>${item.panel?`<button type="button" data-panel="${item.panel}">Ver panel →</button>`:""}</article>`).join("")||'<p class="empty-state">No hay actividades programadas.</p>';
+  qs("#day-panel").innerHTML=items.map(item=>{
+    const type = (isEn && item.type_en) ? item.type_en : item.type;
+    const title = (isEn && item.title_en) ? item.title_en : item.title;
+    const desc = (isEn && item.description_en) ? item.description_en : item.description;
+    return `<article class="timeline-item"><time class="timeline-time">${escapeHTML(item.time)}</time><div><span class="timeline-type">${escapeHTML(type)}</span><h3>${escapeHTML(title)}</h3><p>${escapeHTML(desc)}</p></div>${item.panel?`<button type="button" data-panel="${item.panel}">Ver panel →</button>`:""}</article>`;
+  }).join("")||'<p class="empty-state">No hay actividades programadas.</p>';
 }
 
 function renderPanelCards(){qs("#panel-grid").innerHTML=store.panels.map(p=>`<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${p.title}</h3><p>${p.summary}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`).join("")}
@@ -184,7 +193,15 @@ async function openAdmin(){
   qs("#admin-modal").showModal();
 }
 
-function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
+function renderAdminActivities(){
+  const root=qs("#admin-activities");
+  root.innerHTML=`<div class="admin-list">${store.schedule.map(i=> {
+    const typeEn = i.type_en || (window.getTranslation ? window.getTranslation(i.type, 'en') : '');
+    const titleEn = i.title_en || (window.getTranslation ? window.getTranslation(i.title, 'en') : '');
+    const descEn = i.description_en || (window.getTranslation ? window.getTranslation(i.description, 'en') : '');
+    return `<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo (Español)<input name="type" value="${escapeHTML(i.type)}" required></label><label>Tipo (Inglés)<input name="type_en" value="${escapeHTML(typeEn)}" style="border-color:#bbf;margin-bottom:15px"></label><label>Título (Español)<input name="title" value="${escapeHTML(i.title)}" required></label><label>Título (Inglés)<input name="title_en" value="${escapeHTML(titleEn)}" style="border-color:#bbf;margin-bottom:15px"></label><label>Descripción (Español)<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><label>Descripción (Inglés)<textarea name="description_en" style="border-color:#bbf">${escapeHTML(descEn)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`;
+  }).join("")}</div>`;
+}
 function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label style="margin-bottom:8px">Temas de análisis (ES / EN)</label><div data-idx="${p.topics.length}">${p.topics.map((t,i)=>{const enTitle=t[2]||(window.getTranslation?window.getTranslation(t[0],'en'):'');const enDesc=t[3]||(window.getTranslation?window.getTranslation(t[1],'en'):'');return`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold" title="Eliminar tema">X</button><input name="topic_title_${i}" placeholder="Título (Español)" value="${escapeHTML(t[0]||'')}" style="margin-right:20px"><textarea name="topic_desc_${i}" placeholder="Descripción (Español)">${escapeHTML(t[1]||'')}</textarea><input name="topic_title_en_${i}" placeholder="Título (Inglés)" value="${escapeHTML(enTitle)}" style="margin-right:20px;margin-top:10px;border-color:#bbf"><textarea name="topic_desc_en_${i}" placeholder="Descripción (Inglés)" style="border-color:#bbf">${escapeHTML(enDesc)}</textarea></div>`}).join("")}</div><button type="button" onclick="const d=this.previousElementSibling;const i=parseInt(d.dataset.idx);d.dataset.idx=i+1;const n=document.createElement('div');n.style.cssText='display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative';n.innerHTML='<button type=\\'button\\' onclick=\\'this.parentElement.remove()\\' style=\\'position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold\\' title=\\'Eliminar tema\\'>X</button><input name=\\'topic_title_'+i+'\\' placeholder=\\'Título (Español)\\' style=\\'margin-right:20px\\'><textarea name=\\'topic_desc_'+i+'\\' placeholder=\\'Descripción (Español)\\'></textarea><input name=\\'topic_title_en_'+i+'\\' placeholder=\\'Título (Inglés)\\' style=\\'margin-right:20px;margin-top:10px;border-color:#bbf\\'><textarea name=\\'topic_desc_en_'+i+'\\' placeholder=\\'Descripción (Inglés)\\' style=\\'border-color:#bbf\\'></textarea>';d.appendChild(n)" style="margin-bottom:15px;padding:6px 12px;font-size:14px;background:none;border:1px dashed var(--blue);color:var(--blue);cursor:pointer;border-radius:4px;">+ Añadir Tema</button><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
 function renderAdminAttendees(){
   const data=store.attendees;
@@ -202,6 +219,9 @@ function renderAdminAttendees(){
 }
 
 qsa("[data-day]").forEach(button=>button.addEventListener("click",()=>{selectedDay=button.dataset.day;qsa("[data-day]").forEach(b=>b.setAttribute("aria-selected",String(b===button)));renderSchedule()}));
+qsa("[data-language]").forEach(button=>button.addEventListener("click", () => {
+  setTimeout(() => renderSchedule(), 50);
+}));
 document.addEventListener("click",e=>{
   const panelButton=e.target.closest("[data-panel]");if(panelButton)openPanel(panelButton.dataset.panel);
   const opener=e.target.closest("[data-open]");if(opener){if(opener.dataset.open==="admin-modal")openAdmin();else qs(`#${opener.dataset.open}`).showModal()}
