@@ -65,7 +65,7 @@ async function fetchAttendees() {
 }
 
 async function renderSchedule(){
-  const isEn = window.currentLang === 'en';
+  const isEn = window.I18N.language === 'en';
   const items=store.schedule.filter(item=>item.day===selectedDay);
   qs("#day-panel").innerHTML=items.map(item=>{
     const type = (isEn && item.type_en) ? item.type_en : item.type;
@@ -76,7 +76,7 @@ async function renderSchedule(){
 }
 
 function renderPanelCards() {
-  const isEn = window.currentLang === 'en';
+  const isEn = window.I18N.language === 'en';
   qs("#panel-grid").innerHTML = store.panels.map(p => {
     const title = (isEn && p.title_en) ? p.title_en : p.title;
     const summary = (isEn && p.summary_en) ? p.summary_en : p.summary;
@@ -86,7 +86,7 @@ function renderPanelCards() {
 function openPanel(id) {
   const p = store.panels.find(x => x.id === Number(id));
   if (!p) return;
-  const isEn = window.currentLang === 'en';
+  const isEn = window.I18N.language === 'en';
   const title = (isEn && p.title_en) ? p.title_en : p.title;
   const summary = (isEn && p.summary_en) ? p.summary_en : p.summary;
   const director = (isEn && p.director_en) ? p.director_en : p.director;
