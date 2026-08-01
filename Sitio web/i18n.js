@@ -317,6 +317,11 @@
     const dictionary=target==="en"?ES_EN:EN_ES;
     return dictionary[value]||dynamicTranslation(value,target);
   }
+  window.getTranslation = function(text, target="en") {
+    if (!text) return "";
+    const dictionary=target==="en"?ES_EN:EN_ES;
+    return dictionary[text]||text;
+  };
 
   function translateTextNode(node,target){
     const value=node.nodeValue;if(!value||!value.trim())return;
@@ -332,9 +337,20 @@
 
   function translateTree(root,target=current){
     if(!root)return;translating=true;
+    if (root.nodeType === Node.ELEMENT_NODE && root.closest && root.closest('#admin-modal')) { translating=false; return; }
+    if (root.nodeType === Node.TEXT_NODE && root.parentElement && root.parentElement.closest('#admin-modal')) { translating=false; return; }
+    
     if(root.nodeType===Node.TEXT_NODE){translateTextNode(root,target);translating=false;return}
     if(root.nodeType===Node.ELEMENT_NODE){if(["SCRIPT","STYLE"].includes(root.tagName)){translating=false;return}translateElement(root,target)}
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);let node;
+    
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.closest && node.closest('#admin-modal')) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement && node.parentElement.closest('#admin-modal')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    let node;
     while((node=walker.nextNode()))node.nodeType===Node.TEXT_NODE?translateTextNode(node,target):translateElement(node,target);
     translating=false;
   }
