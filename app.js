@@ -66,7 +66,7 @@ async function renderSchedule(){
 }
 
 function renderPanelCards(){qs("#panel-grid").innerHTML=store.panels.map(p=>`<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${p.title}</h3><p>${p.summary}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`).join("")}
-function openPanel(id){const p=store.panels.find(x=>x.id===Number(id));if(!p)return;qs("#detail-content").innerHTML=`<p class="eyebrow">${p.date}</p><h2>${p.title}</h2><p class="detail-intro">${p.summary}</p><div class="detail-meta"><strong>Dirección:</strong> ${p.director}<br><strong>Participantes:</strong> ${p.participants}</div><h3>Temas de análisis</h3><ol class="topic-list">${p.topics.map(t=>`<li><strong>${escapeHTML(t[0])}</strong><p>${escapeHTML(t[1])}</p></li>`).join("")}</ol>`;qs("#detail-modal").showModal()}
+function openPanel(id){const p=store.panels.find(x=>x.id===Number(id));if(!p)return;const isEn=window.currentLang==='en';qs("#detail-content").innerHTML=`<p class="eyebrow">${p.date}</p><h2>${p.title}</h2><p class="detail-intro">${p.summary}</p><div class="detail-meta"><strong>Dirección:</strong> ${p.director}<br><strong>Participantes:</strong> ${p.participants}</div><h3>Temas de análisis</h3><ol class="topic-list">${p.topics.map(t=>{const title=(isEn&&t[2])?t[2]:t[0];const desc=(isEn&&t[3])?t[3]:t[1];return`<li><strong>${escapeHTML(title)}</strong><p>${escapeHTML(desc)}</p></li>`}).join("")}</ol>`;qs("#detail-modal").showModal()}
 function showToast(message){const toast=qs("#toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),4200)}
 function generateCode(){return "EA26-"+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6).padStart(6,"0")}
 
@@ -184,7 +184,7 @@ async function openAdmin(){
 }
 
 function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
-function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label>Temas de análisis (Formato JSON Estricto)<textarea name="topics" required style="font-family:monospace;height:220px">${escapeHTML(JSON.stringify(p.topics, null, 2))}</textarea><small style="opacity:0.7">Debe ser un array de arrays. Ejemplo: <code>[ ["Título 1", "Desc 1"], ["Título 2", "Desc 2"] ]</code></small></label><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
+function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label style="margin-bottom:8px">Temas de análisis (ES / EN)</label><div data-idx="${p.topics.length}">${p.topics.map((t,i)=>`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold" title="Eliminar tema">X</button><input name="topic_title_${i}" placeholder="Título (Español)" value="${escapeHTML(t[0]||'')}" style="margin-right:20px"><textarea name="topic_desc_${i}" placeholder="Descripción (Español)">${escapeHTML(t[1]||'')}</textarea><input name="topic_title_en_${i}" placeholder="Título (Inglés)" value="${escapeHTML(t[2]||'')}" style="margin-right:20px;margin-top:10px;border-color:#bbf"><textarea name="topic_desc_en_${i}" placeholder="Descripción (Inglés)" style="border-color:#bbf">${escapeHTML(t[3]||'')}</textarea></div>`).join("")}</div><button type="button" onclick="const d=this.previousElementSibling;const i=parseInt(d.dataset.idx);d.dataset.idx=i+1;const n=document.createElement('div');n.style.cssText='display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative';n.innerHTML='<button type=\\'button\\' onclick=\\'this.parentElement.remove()\\' style=\\'position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold\\' title=\\'Eliminar tema\\'>X</button><input name=\\'topic_title_'+i+'\\' placeholder=\\'Título (Español)\\' style=\\'margin-right:20px\\'><textarea name=\\'topic_desc_'+i+'\\' placeholder=\\'Descripción (Español)\\'></textarea><input name=\\'topic_title_en_'+i+'\\' placeholder=\\'Título (Inglés)\\' style=\\'margin-right:20px;margin-top:10px;border-color:#bbf\\'><textarea name=\\'topic_desc_en_'+i+'\\' placeholder=\\'Descripción (Inglés)\\' style=\\'border-color:#bbf\\'></textarea>';d.appendChild(n)" style="margin-bottom:15px;padding:6px 12px;font-size:14px;background:none;border:1px dashed var(--blue);color:var(--blue);cursor:pointer;border-radius:4px;">+ Añadir Tema</button><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
 function renderAdminAttendees(){
   const data=store.attendees;
   qs("#attendee-count").textContent=data.length;
@@ -306,13 +306,21 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
     }
   } else if (form.matches("[data-edit-panel-form]")) {
     if (db) {
-      try {
-        data.topics = JSON.parse(data.topics);
-        if (!Array.isArray(data.topics)) throw new Error("Debe ser un array");
-      } catch (err) {
-        showToast("Error: El formato de los temas JSON es inválido.");
-        return;
-      }
+      const topicsArray = [];
+      const keys = Object.keys(data).filter(k => k.startsWith("topic_title_") && !k.startsWith("topic_title_en_"));
+      keys.forEach(k => {
+        const idx = k.replace("topic_title_", "");
+        const title = data[k].trim();
+        const desc = data[`topic_desc_${idx}`]?.trim() || "";
+        const title_en = data[`topic_title_en_${idx}`]?.trim() || "";
+        const desc_en = data[`topic_desc_en_${idx}`]?.trim() || "";
+        if (title) topicsArray.push([title, desc, title_en, desc_en]);
+        delete data[k];
+        delete data[`topic_desc_${idx}`];
+        delete data[`topic_title_en_${idx}`];
+        delete data[`topic_desc_en_${idx}`];
+      });
+      data.topics = topicsArray;
       const { error } = await db.from('panels').update(data).eq('id', form.dataset.editPanelForm);
       if (!error) {
         await fetchPanels();
