@@ -96,6 +96,7 @@ async function register(form){
     details.activity_p3 = data.activity_p3 ? "Yes" : "No";
     details.activity_p4 = data.activity_p4 ? "Yes" : "No";
     details.activity_p5 = data.activity_p5 ? "Yes" : "No";
+    details.activity_close = data.activity_close ? "Yes" : "No";
   }
 
   const attendee = {
@@ -239,7 +240,8 @@ function showAttendeeDetails(id) {
                 <div><span>Panel 2</span><strong>${d.activity_p2==="Yes"?"Sí":"No"}</strong></div>
                 <div><span>Panel 3</span><strong>${d.activity_p3==="Yes"?"Sí":"No"}</strong></div>
                 <div><span>Panel 4</span><strong>${d.activity_p4==="Yes"?"Sí":"No"}</strong></div>
-                <div><span>Panel 5</span><strong>${d.activity_p5==="Yes"?"Sí":"No"}</strong></div>`;
+                <div><span>Panel 5</span><strong>${d.activity_p5==="Yes"?"Sí":"No"}</strong></div>
+                <div><span>Clausura</span><strong>${d.activity_close==="Yes"?"Sí":"No"}</strong></div>`;
   }
   content += `</div>`;
   qs("#detail-content").innerHTML = content;
@@ -380,7 +382,8 @@ window.exportAttendeesToExcel = function() {
     "Panel 2": a.registration_details?.activity_p2 === "Yes" ? "Sí" : "No",
     "Panel 3": a.registration_details?.activity_p3 === "Yes" ? "Sí" : "No",
     "Panel 4": a.registration_details?.activity_p4 === "Yes" ? "Sí" : "No",
-    "Panel 5": a.registration_details?.activity_p5 === "Yes" ? "Sí" : "No"
+    "Panel 5": a.registration_details?.activity_p5 === "Yes" ? "Sí" : "No",
+    "Clausura": a.registration_details?.activity_close === "Yes" ? "Sí" : "No"
   }));
   
   const wb = XLSX.utils.book_new();
