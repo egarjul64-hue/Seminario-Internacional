@@ -19,7 +19,7 @@ const defaultSchedule = [
   {id:"d11-close",day:"11",time:"16:30",type:"Síntesis",title:"Puesta en común de los grupos de trabajo",description:"Consolidación de hallazgos para alimentar las mesas redondas.",panel:null},
   {id:"d12-p1",day:"12",time:"09:00",type:"Panel 1",title:"Ciberespacio y transición al combate algorítmico",description:"Director: Cor. Roberto García Arroba · Estado Mayor del Aire.",panel:1},
   {id:"d12-p2",day:"12",time:"12:00",type:"Panel 2",title:"Computación, conectividad y ciberdefensa post-cuántica",description:"Industria, CESTIC y especialistas en tecnologías de nueva generación.",panel:2},
-  {id:"d13-p3",day:"13",time:"09:00",type:"Panel 3",title:"El reto de la cultura, la organización y el talento",description:"Director: GD Fernando Carrillo Cremades · GJSTCIBER.",panel:3},
+  {id:"d13-p3",day:"12",time:"09:00",type:"Panel 3",title:"El reto de la cultura, la organización y el talento",description:"Director: GD Fernando Carrillo Cremades – GJSTCIBER.",panel:3},
   {id:"d13-p4",day:"13",time:"11:00",type:"Panel 4",title:"Las ciberoperaciones en los conflictos actuales",description:"Dirección: especialista del Mando Conjunto del Ciberespacio.",panel:4},
   {id:"d13-p5",day:"13",time:"13:00",type:"Panel 5",title:"Transformación, gobernanza e interoperabilidad",description:"CESTIC, EMA/SEGE y representantes de países OTAN.",panel:5},
   {id:"d13-close",day:"13",time:"16:30",type:"Conferencia de clausura",title:"Conclusiones y clausura institucional",description:"Vicealmirante Roca · Mando Conjunto del Ciberespacio.",panel:null}
@@ -184,7 +184,20 @@ async function openAdmin(){
 
 function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
 function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label>Temas de análisis (Formato JSON Estricto)<textarea name="topics" required style="font-family:monospace;height:220px">${escapeHTML(JSON.stringify(p.topics, null, 2))}</textarea><small style="opacity:0.7">Debe ser un array de arrays. Ejemplo: <code>[ ["Título 1", "Desc 1"], ["Título 2", "Desc 2"] ]</code></small></label><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
-function renderAdminAttendees(){const data=store.attendees;qs("#attendee-count").textContent=data.length;qs("#admin-attendees").innerHTML=data.length?`<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`:'<p class="empty-state">Todavía no se ha recibido ninguna inscripción.</p>'}
+function renderAdminAttendees(){
+  const data=store.attendees;
+  qs("#attendee-count").textContent=data.length;
+  if (!data.length) {
+    qs("#admin-attendees").innerHTML = '<p class="empty-state">Todavía no se ha recibido ninguna inscripción.</p>';
+    return;
+  }
+  const buttonsHtml = `<div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
+    <button class="button button-ghost" type="button" onclick="exportAttendeesToExcel()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a Excel</button>
+    <button class="button button-ghost" type="button" onclick="exportAttendeesToPDF()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a PDF</button>
+  </div>`;
+  const tableHtml = `<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`;
+  qs("#admin-attendees").innerHTML = buttonsHtml + tableHtml;
+}
 
 qsa("[data-day]").forEach(button=>button.addEventListener("click",()=>{selectedDay=button.dataset.day;qsa("[data-day]").forEach(b=>b.setAttribute("aria-selected",String(b===button)));renderSchedule()}));
 document.addEventListener("click",e=>{
@@ -349,5 +362,66 @@ async function init() {
   renderSchedule();
   renderPanelCards();
 }
+
+window.exportAttendeesToExcel = function() {
+  if (!window.XLSX) return showToast("Error: Librería XLSX no cargada.");
+  const panels = store.attendees.filter(a => a.attendance_type === "panel").map(a => ({
+    "Nombre": a.name, "Organismo": a.organization, "Cargo": a.role, "Email": a.email, "Teléfono": a.phone,
+    "Código": a.code, "Estado": a.status, "Empleo/Rango": a.registration_details?.rank || "",
+    "DNI/Pasaporte": a.registration_details?.passport || "", "Llegada": a.registration_details?.arrival_dtg || "",
+    "Salida": a.registration_details?.departure_dtg || "", "Alojamiento": a.registration_details?.lodging === "Yes" ? "Sí" : "No",
+    "Alergias": a.registration_details?.allergies || "", "Visita Social": a.registration_details?.visit === "Yes" ? "Sí" : "No",
+    "Acompañante": a.registration_details?.companion || ""
+  }));
+  const publico = store.attendees.filter(a => a.attendance_type !== "panel").map(a => ({
+    "Nombre": a.name, "Organismo": a.organization, "Cargo": a.role, "Email": a.email, "Teléfono": a.phone,
+    "Código": a.code, "Estado": a.status, "Conclusiones GT": a.registration_details?.activity_gt === "Yes" ? "Sí" : "No",
+    "Panel 1": a.registration_details?.activity_p1 === "Yes" ? "Sí" : "No",
+    "Panel 2": a.registration_details?.activity_p2 === "Yes" ? "Sí" : "No",
+    "Panel 3": a.registration_details?.activity_p3 === "Yes" ? "Sí" : "No",
+    "Panel 4": a.registration_details?.activity_p4 === "Yes" ? "Sí" : "No",
+    "Panel 5": a.registration_details?.activity_p5 === "Yes" ? "Sí" : "No"
+  }));
+  
+  const wb = XLSX.utils.book_new();
+  if (panels.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(panels), "Participantes");
+  if (publico.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(publico), "Público General");
+  if (panels.length === 0 && publico.length === 0) return showToast("No hay datos para exportar.");
+  XLSX.writeFile(wb, "Inscritos_Seminario.xlsx");
+};
+
+window.exportAttendeesToPDF = function() {
+  if (!window.jspdf || !window.jspdf.jsPDF) return showToast("Error: Librería jsPDF no cargada.");
+  const doc = new window.jspdf.jsPDF('landscape');
+  
+  doc.setFontSize(16);
+  doc.text("Listado de Inscritos - Seminario Internacional EA", 14, 15);
+  
+  const panelRows = store.attendees.filter(a => a.attendance_type === "panel").map(a => [
+    a.name, a.organization, a.role, a.email, a.phone, a.registration_details?.passport || "",
+    a.registration_details?.lodging === "Yes" ? "Sí" : "No", a.status
+  ]);
+  
+  let finalY = 15;
+  if (panelRows.length > 0) {
+    doc.setFontSize(12);
+    doc.text("Participantes en Paneles", 14, 25);
+    doc.autoTable({ startY: 30, head: [["Nombre", "Organismo", "Cargo", "Email", "Teléfono", "DNI/Pasap.", "Aloj.", "Estado"]], body: panelRows, headStyles: { fillColor: [6, 29, 61] } });
+    finalY = doc.lastAutoTable.finalY;
+  }
+  
+  const pubRows = store.attendees.filter(a => a.attendance_type !== "panel").map(a => [
+    a.name, a.organization, a.role, a.email, a.phone, a.status
+  ]);
+  
+  if (pubRows.length > 0) {
+    doc.setFontSize(12);
+    doc.text("Público General", 14, finalY + 15);
+    doc.autoTable({ startY: finalY + 20, head: [["Nombre", "Organismo", "Cargo", "Email", "Teléfono", "Estado"]], body: pubRows, headStyles: { fillColor: [6, 29, 61] } });
+  }
+  
+  if (panelRows.length === 0 && pubRows.length === 0) return showToast("No hay datos para exportar.");
+  doc.save("Inscritos_Seminario.pdf");
+};
 
 init();
