@@ -19,7 +19,7 @@ const defaultSchedule = [
   {id:"d11-close",day:"11",time:"16:30",type:"Síntesis",title:"Puesta en común de los grupos de trabajo",description:"Consolidación de hallazgos para alimentar las mesas redondas.",panel:null},
   {id:"d12-p1",day:"12",time:"09:00",type:"Panel 1",title:"Ciberespacio y transición al combate algorítmico",description:"Director: Cor. Roberto García Arroba · Estado Mayor del Aire.",panel:1},
   {id:"d12-p2",day:"12",time:"12:00",type:"Panel 2",title:"Computación, conectividad y ciberdefensa post-cuántica",description:"Industria, CESTIC y especialistas en tecnologías de nueva generación.",panel:2},
-  {id:"d13-p3",day:"13",time:"09:00",type:"Panel 3",title:"El reto de la cultura, la organización y el talento",description:"Director: GD Fernando Carrillo Cremades · GJSTCIBER.",panel:3},
+  {id:"d13-p3",day:"12",time:"09:00",type:"Panel 3",title:"El reto de la cultura, la organización y el talento",description:"Director: GD Fernando Carrillo Cremades – GJSTCIBER.",panel:3},
   {id:"d13-p4",day:"13",time:"11:00",type:"Panel 4",title:"Las ciberoperaciones en los conflictos actuales",description:"Dirección: especialista del Mando Conjunto del Ciberespacio.",panel:4},
   {id:"d13-p5",day:"13",time:"13:00",type:"Panel 5",title:"Transformación, gobernanza e interoperabilidad",description:"CESTIC, EMA/SEGE y representantes de países OTAN.",panel:5},
   {id:"d13-close",day:"13",time:"16:30",type:"Conferencia de clausura",title:"Conclusiones y clausura institucional",description:"Vicealmirante Roca · Mando Conjunto del Ciberespacio.",panel:null}
