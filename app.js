@@ -147,7 +147,11 @@ async function register(form){
     form.reset();
     qs("#section-panel").hidden = true;
     qs("#section-public").hidden = true;
-    showToast(`Solicitud registrada. Guarde su código de acceso: ${code}`);
+      
+    const successContent = `<strong>${escapeHTML(attendee.name)}</strong>, su solicitud ha sido registrada y será procesada internamente a la menor brevedad.<br><br>Anote el siguiente código <strong>${code}</strong> e ingrese más tarde para ver su estado de admisión.`;
+    qs("#success-content").innerHTML = successContent;
+    qs("#success-modal").showModal();
+      
     if(adminAuthenticated) {
       await fetchAttendees();
       renderAdminAttendees();
