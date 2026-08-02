@@ -190,11 +190,12 @@ function renderProfile(a){
   
   let downloadsHTML = "";
   if (a.status === "Autorizada") {
-    downloadsHTML = `<div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line); display:flex; gap:12px; flex-wrap:wrap;">
-      <a href="assets/Programa.pdf" target="_blank" class="button button-small">Imprimir Programa (PDF)</a>`;
+    downloadsHTML = `<div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line);">
+      <h4 style="margin:0 0 12px; font-size:0.9rem;">Agenda del Evento</h4>
+      <img src="assets/agenda.png" alt="Agenda" style="max-width:100%; border:1px solid var(--line); border-radius:4px; display:block;">`;
     
     if (a.attendance_type === "panel") {
-       downloadsHTML += `<a href="assets/WelcomeGuide.pdf" target="_blank" class="button button-small" style="background:#0b3567; border-color:#0b3567; color:#fff;">Welcome Guide (PDF)</a>`;
+       downloadsHTML += `<div style="margin-top:18px;"><a href="assets/WelcomeGuide.pdf" target="_blank" class="button button-small" style="background:#0b3567; border-color:#0b3567; color:#fff;">Welcome Guide (PDF)</a></div>`;
     }
     downloadsHTML += `</div>`;
   }
