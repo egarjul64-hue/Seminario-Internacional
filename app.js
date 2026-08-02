@@ -188,7 +188,18 @@ function renderProfile(a){
     detailsHTML = `<div><span>Asistencia</span><strong>Público general</strong></div>`;
   }
   
-  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div>${detailsHTML}</div></div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
+  let downloadsHTML = "";
+  if (a.status === "Autorizada") {
+    downloadsHTML = `<div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line); display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="assets/Programa.pdf" target="_blank" class="button button-small">Imprimir Programa (PDF)</a>`;
+    
+    if (a.attendance_type === "panel") {
+       downloadsHTML += `<a href="assets/WelcomeGuide.pdf" target="_blank" class="button button-small" style="background:#0b3567; border-color:#0b3567; color:#fff;">Welcome Guide (PDF)</a>`;
+    }
+    downloadsHTML += `</div>`;
+  }
+  
+  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div>${detailsHTML}</div>${downloadsHTML}</div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
   qs("#profile-exit").onclick=()=>{el.hidden=true;qs("#attendee-login").hidden=false;qs("#attendee-login").reset()}
 }
 
