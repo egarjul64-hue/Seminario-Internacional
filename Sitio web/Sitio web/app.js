@@ -31,6 +31,7 @@ const store = {
   panels: [],
   attendees: []
 };
+const SUPER_ADMIN_EMAIL = "egjulian@hotmail.com"; // Cambia esto por tu correo real de administrador
 
 const escapeHTML = value => String(value ?? "").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const qs=(s,c=document)=>c.querySelector(s);const qsa=(s,c=document)=>[...c.querySelectorAll(s)];
@@ -38,9 +39,12 @@ let selectedDay="10";let adminAuthenticated=false;
 
 async function fetchSchedule() {
   if (!db) return;
-  const { data, error } = await db.from('schedule').select('*').order('time');
+  const { data, error } = await db.from('schedule').select('*');
   if (!error && data && data.length > 0) {
-    store.schedule = data;
+    store.schedule = data.sort((a,b) => {
+      if (a.day !== b.day) return a.day.localeCompare(b.day);
+      return a.time.localeCompare(b.time);
+    });
   }
 }
 
@@ -61,12 +65,35 @@ async function fetchAttendees() {
 }
 
 async function renderSchedule(){
+  const isEn = window.I18N.language === 'en';
   const items=store.schedule.filter(item=>item.day===selectedDay);
-  qs("#day-panel").innerHTML=items.map(item=>`<article class="timeline-item"><time class="timeline-time">${escapeHTML(item.time)}</time><div><span class="timeline-type">${escapeHTML(item.type)}</span><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>${item.panel?`<button type="button" data-panel="${item.panel}">Ver panel →</button>`:""}</article>`).join("")||'<p class="empty-state">No hay actividades programadas.</p>';
+  qs("#day-panel").innerHTML=items.map(item=>{
+    const type = (isEn && item.type_en) ? item.type_en : item.type;
+    const title = (isEn && item.title_en) ? item.title_en : item.title;
+    const desc = (isEn && item.description_en) ? item.description_en : item.description;
+    return `<article class="timeline-item"><time class="timeline-time">${escapeHTML(item.time)}</time><div><span class="timeline-type">${escapeHTML(type)}</span><h3>${escapeHTML(title)}</h3><p>${escapeHTML(desc)}</p></div>${item.panel?`<button type="button" data-panel="${item.panel}">Ver panel →</button>`:""}</article>`;
+  }).join("")||'<p class="empty-state">No hay actividades programadas.</p>';
 }
 
-function renderPanelCards(){qs("#panel-grid").innerHTML=store.panels.map(p=>`<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${p.title}</h3><p>${p.summary}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`).join("")}
-function openPanel(id){const p=store.panels.find(x=>x.id===Number(id));if(!p)return;qs("#detail-content").innerHTML=`<p class="eyebrow">${p.date}</p><h2>${p.title}</h2><p class="detail-intro">${p.summary}</p><div class="detail-meta"><strong>Dirección:</strong> ${p.director}<br><strong>Participantes:</strong> ${p.participants}</div><h3>Temas de análisis</h3><ol class="topic-list">${p.topics.map(t=>`<li><strong>${escapeHTML(t[0])}</strong><p>${escapeHTML(t[1])}</p></li>`).join("")}</ol>`;qs("#detail-modal").showModal()}
+function renderPanelCards() {
+  const isEn = window.I18N.language === 'en';
+  qs("#panel-grid").innerHTML = store.panels.map(p => {
+    const title = (isEn && p.title_en) ? p.title_en : p.title;
+    const summary = (isEn && p.summary_en) ? p.summary_en : p.summary;
+    return `<article class="topic-card"><span class="number">0${p.id}</span><span class="date">${p.date}</span><h3>${escapeHTML(title)}</h3><p>${escapeHTML(summary)}</p><button type="button" data-panel="${p.id}">Explorar temas →</button></article>`;
+  }).join("");
+}
+function openPanel(id) {
+  const p = store.panels.find(x => x.id === Number(id));
+  if (!p) return;
+  const isEn = window.I18N.language === 'en';
+  const title = (isEn && p.title_en) ? p.title_en : p.title;
+  const summary = (isEn && p.summary_en) ? p.summary_en : p.summary;
+  const director = (isEn && p.director_en) ? p.director_en : p.director;
+  const participants = (isEn && p.participants_en) ? p.participants_en : p.participants;
+  qs("#detail-content").innerHTML = `<p class="eyebrow">${p.date}</p><h2>${escapeHTML(title)}</h2><p class="detail-intro">${escapeHTML(summary)}</p><div class="detail-meta"><strong>${isEn ? 'Direction:' : 'Dirección:'}</strong> ${escapeHTML(director)}<br><strong>${isEn ? 'Participants:' : 'Participantes:'}</strong> ${escapeHTML(participants)}</div><h3>${isEn ? 'Analysis topics' : 'Temas de análisis'}</h3><ol class="topic-list">${p.topics.map(t => { const tTitle = (isEn && t[2]) ? t[2] : t[0]; const tDesc = (isEn && t[3]) ? t[3] : t[1]; return `<li><strong>${escapeHTML(tTitle)}</strong><p>${escapeHTML(tDesc)}</p></li>` }).join("")}</ol>`;
+  qs("#detail-modal").showModal();
+}
 function showToast(message){const toast=qs("#toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),4200)}
 function generateCode(){return "EA26-"+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6).padStart(6,"0")}
 
@@ -161,7 +188,19 @@ function renderProfile(a){
     detailsHTML = `<div><span>Asistencia</span><strong>Público general</strong></div>`;
   }
   
-  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div>${detailsHTML}</div></div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
+  let downloadsHTML = "";
+  if (a.status === "Autorizada") {
+    downloadsHTML = `<div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line);">
+      <h4 style="margin:0 0 12px; font-size:0.9rem;">Agenda del Evento</h4>
+      <img src="assets/agenda.png" alt="Agenda" style="max-width:100%; border:1px solid var(--line); border-radius:4px; display:block;">`;
+    
+    if (a.attendance_type === "panel") {
+       downloadsHTML += `<div style="margin-top:18px;"><a href="assets/WelcomeGuide.pdf" target="_blank" class="button button-small" style="background:#0b3567; border-color:#0b3567; color:#fff;">Welcome Guide (PDF)</a></div>`;
+    }
+    downloadsHTML += `</div>`;
+  }
+  
+  el.innerHTML=`<div class="profile-card"><span class="profile-status ${statusClass}">${escapeHTML(a.status)}</span><h3>${escapeHTML(a.name)}</h3><div class="profile-grid"><div><span>Organismo</span><strong>${escapeHTML(a.organization)}</strong></div><div><span>Cargo</span><strong>${escapeHTML(a.role)}</strong></div><div><span>Correo</span><strong>${escapeHTML(a.email)}</strong></div><div><span>Teléfono</span><strong>${escapeHTML(a.phone)}</strong></div><div><span>Código</span><strong>${escapeHTML(a.code)}</strong></div><div><span>Solicitud</span><strong>${new Date(a.registeredAt).toLocaleDateString(window.I18N?.locale||"es-ES")}</strong></div>${detailsHTML}</div>${downloadsHTML}</div><button class="button" id="profile-exit" type="button" style="margin-top:18px">Salir</button>`;
   qs("#profile-exit").onclick=()=>{el.hidden=true;qs("#attendee-login").hidden=false;qs("#attendee-login").reset()}
 }
 
@@ -183,8 +222,36 @@ async function openAdmin(){
   qs("#admin-modal").showModal();
 }
 
-function renderAdminActivities(){const root=qs("#admin-activities");root.innerHTML=`<div class="admin-list">${store.schedule.map(i=>`<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo<input name="type" value="${escapeHTML(i.type)}" required></label><label>Título<input name="title" value="${escapeHTML(i.title)}" required></label><label>Descripción<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`).join("")}</div>`}
-function renderAdminPanels(){const root=qs("#admin-panels");root.innerHTML=`<div class="admin-list">${store.panels.map(p=>`<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden><label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label><label>Título<input name="title" value="${escapeHTML(p.title)}" required></label><label>Resumen<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label><label>Director<input name="director" value="${escapeHTML(p.director)}" required></label><label>Participantes<input name="participants" value="${escapeHTML(p.participants)}" required></label><label style="margin-bottom:8px">Temas de análisis</label><div data-idx="${p.topics.length}">${p.topics.map((t,i)=>`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold" title="Eliminar tema">X</button><input name="topic_title_${i}" placeholder="Título del tema" value="${escapeHTML(t[0]||'')}" style="margin-right:20px"><textarea name="topic_desc_${i}" placeholder="Descripción del tema">${escapeHTML(t[1]||'')}</textarea></div>`).join("")}</div><button type="button" onclick="const d=this.previousElementSibling;const i=parseInt(d.dataset.idx);d.dataset.idx=i+1;const n=document.createElement('div');n.style.cssText='display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative';n.innerHTML='<button type=\\'button\\' onclick=\\'this.parentElement.remove()\\' style=\\'position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold\\' title=\\'Eliminar tema\\'>X</button><input name=\\'topic_title_'+i+'\\' placeholder=\\'Título del tema\\' style=\\'margin-right:20px\\'><textarea name=\\'topic_desc_'+i+'\\' placeholder=\\'Descripción del tema\\'></textarea>';d.appendChild(n)" style="margin-bottom:15px;padding:6px 12px;font-size:14px;background:none;border:1px dashed var(--blue);color:var(--blue);cursor:pointer;border-radius:4px;">+ Añadir Tema</button><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`).join("")}</div>`}
+function renderAdminActivities(){
+  const root=qs("#admin-activities");
+  root.innerHTML=`<div class="admin-list">${store.schedule.map(i=> {
+    const typeEn = i.type_en || (window.getTranslation ? window.getTranslation(i.type, 'en') : '');
+    const titleEn = i.title_en || (window.getTranslation ? window.getTranslation(i.title, 'en') : '');
+    const descEn = i.description_en || (window.getTranslation ? window.getTranslation(i.description, 'en') : '');
+    return `<div><div class="admin-row"><strong>${escapeHTML(i.day)} NOV<br><small>${escapeHTML(i.time)}</small></strong><div><span class="timeline-type">${escapeHTML(i.type)}</span><b>${escapeHTML(i.title)}</b></div><button type="button" data-edit="${escapeHTML(i.id)}">Editar</button></div><form class="admin-edit" data-edit-form="${escapeHTML(i.id)}" hidden><label>Día (Número)<input name="day" value="${escapeHTML(i.day)}" required></label><label>Hora<input name="time" value="${escapeHTML(i.time)}" required></label><label>Tipo (Español)<input name="type" value="${escapeHTML(i.type)}" required></label><label>Tipo (Inglés)<input name="type_en" value="${escapeHTML(typeEn)}" style="border-color:#bbf;margin-bottom:15px"></label><label>Título (Español)<input name="title" value="${escapeHTML(i.title)}" required></label><label>Título (Inglés)<input name="title_en" value="${escapeHTML(titleEn)}" style="border-color:#bbf;margin-bottom:15px"></label><label>Descripción (Español)<textarea name="description" required>${escapeHTML(i.description)}</textarea></label><label>Descripción (Inglés)<textarea name="description_en" style="border-color:#bbf">${escapeHTML(descEn)}</textarea></label><button class="button" type="submit">Guardar cambios</button></form></div>`;
+  }).join("")}</div>`;
+}
+function renderAdminPanels() {
+  const root = qs("#admin-panels");
+  root.innerHTML = `<div class="admin-list">${store.panels.map(p => {
+    const titleEn = p.title_en || (window.getTranslation ? window.getTranslation(p.title, 'en') : '');
+    const summaryEn = p.summary_en || (window.getTranslation ? window.getTranslation(p.summary, 'en') : '');
+    const directorEn = p.director_en || (window.getTranslation ? window.getTranslation(p.director, 'en') : '');
+    const partEn = p.participants_en || (window.getTranslation ? window.getTranslation(p.participants, 'en') : '');
+    
+    return `<div><div class="admin-row"><strong>${escapeHTML(p.date)}</strong><div><b>${escapeHTML(p.title)}</b></div><button type="button" data-edit-panel="${escapeHTML(p.id)}">Editar</button></div><form class="admin-edit" data-edit-panel-form="${escapeHTML(p.id)}" hidden>
+    <label>Fecha<input name="date" value="${escapeHTML(p.date)}" required></label>
+    <label>Título (Español)<input name="title" value="${escapeHTML(p.title)}" required></label>
+    <label>Título (Inglés)<input name="title_en" value="${escapeHTML(titleEn)}" style="border-color:#bbf;margin-bottom:15px"></label>
+    <label>Resumen (Español)<textarea name="summary" required>${escapeHTML(p.summary)}</textarea></label>
+    <label>Resumen (Inglés)<textarea name="summary_en" style="border-color:#bbf;margin-bottom:15px">${escapeHTML(summaryEn)}</textarea></label>
+    <label>Director (Español)<input name="director" value="${escapeHTML(p.director)}" required></label>
+    <label>Director (Inglés)<input name="director_en" value="${escapeHTML(directorEn)}" style="border-color:#bbf;margin-bottom:15px"></label>
+    <label>Participantes (Español)<input name="participants" value="${escapeHTML(p.participants)}" required></label>
+    <label>Participantes (Inglés)<input name="participants_en" value="${escapeHTML(partEn)}" style="border-color:#bbf;margin-bottom:15px"></label>
+    <label style="margin-bottom:8px">Temas de análisis (ES / EN)</label><div data-idx="${p.topics.length}">${p.topics.map((t,i)=>{const enTitle=t[2]||(window.getTranslation?window.getTranslation(t[0],'en'):'');const enDesc=t[3]||(window.getTranslation?window.getTranslation(t[1],'en'):'');return`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold" title="Eliminar tema">X</button><input name="topic_title_${i}" placeholder="Título (Español)" value="${escapeHTML(t[0]||'')}" style="margin-right:20px"><textarea name="topic_desc_${i}" placeholder="Descripción (Español)">${escapeHTML(t[1]||'')}</textarea><input name="topic_title_en_${i}" placeholder="Título (Inglés)" value="${escapeHTML(enTitle)}" style="margin-right:20px;margin-top:10px;border-color:#bbf"><textarea name="topic_desc_en_${i}" placeholder="Descripción (Inglés)" style="border-color:#bbf">${escapeHTML(enDesc)}</textarea></div>`}).join("")}</div><button type="button" onclick="const d=this.previousElementSibling;const i=parseInt(d.dataset.idx);d.dataset.idx=i+1;const n=document.createElement('div');n.style.cssText='display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:10px;background:#f0f4f8;border:1px solid #ddd;border-radius:4px;position:relative';n.innerHTML='<button type=\\'button\\' onclick=\\'this.parentElement.remove()\\' style=\\'position:absolute;top:5px;right:5px;background:none;border:none;color:red;cursor:pointer;font-weight:bold\\' title=\\'Eliminar tema\\'>X</button><input name=\\'topic_title_'+i+'\\' placeholder=\\'Título (Español)\\' style=\\'margin-right:20px\\'><textarea name=\\'topic_desc_'+i+'\\' placeholder=\\'Descripción (Español)\\'></textarea><input name=\\'topic_title_en_'+i+'\\' placeholder=\\'Título (Inglés)\\' style=\\'margin-right:20px;margin-top:10px;border-color:#bbf\\'><textarea name=\\'topic_desc_en_'+i+'\\' placeholder=\\'Descripción (Inglés)\\' style=\\'border-color:#bbf\\'></textarea>';d.appendChild(n)" style="margin-bottom:15px;padding:6px 12px;font-size:14px;background:none;border:1px dashed var(--blue);color:var(--blue);cursor:pointer;border-radius:4px;">+ Añadir Tema</button><button class="button" type="submit">Guardar cambios del Panel</button></form></div>`;
+  }).join("")}</div>`;
+}
 function renderAdminAttendees(){
   const data=store.attendees;
   qs("#attendee-count").textContent=data.length;
@@ -201,6 +268,9 @@ function renderAdminAttendees(){
 }
 
 qsa("[data-day]").forEach(button=>button.addEventListener("click",()=>{selectedDay=button.dataset.day;qsa("[data-day]").forEach(b=>b.setAttribute("aria-selected",String(b===button)));renderSchedule()}));
+qsa("[data-language]").forEach(button=>button.addEventListener("click", () => {
+  setTimeout(() => renderSchedule(), 50);
+}));
 document.addEventListener("click",e=>{
   const panelButton=e.target.closest("[data-panel]");if(panelButton)openPanel(panelButton.dataset.panel);
   const opener=e.target.closest("[data-open]");if(opener){if(opener.dataset.open==="admin-modal")openAdmin();else qs(`#${opener.dataset.open}`).showModal()}
@@ -264,6 +334,17 @@ qs("#admin-login").addEventListener("submit", async e=>{
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
     qs("#admin-dashboard").hidden=false;
+    
+    // Check super admin for users tab
+    const usersTab = qs('[data-admin-tab="users"]');
+    if (usersTab) {
+      if (data.user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+        usersTab.style.display = "";
+      } else {
+        usersTab.style.display = "none";
+      }
+    }
+
     await fetchAttendees();
     renderAdminActivities();
     renderAdminPanels();
@@ -307,14 +388,18 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
   } else if (form.matches("[data-edit-panel-form]")) {
     if (db) {
       const topicsArray = [];
-      const keys = Object.keys(data).filter(k => k.startsWith("topic_title_"));
+      const keys = Object.keys(data).filter(k => k.startsWith("topic_title_") && !k.startsWith("topic_title_en_"));
       keys.forEach(k => {
         const idx = k.replace("topic_title_", "");
         const title = data[k].trim();
         const desc = data[`topic_desc_${idx}`]?.trim() || "";
-        if (title) topicsArray.push([title, desc]);
+        const title_en = data[`topic_title_en_${idx}`]?.trim() || "";
+        const desc_en = data[`topic_desc_en_${idx}`]?.trim() || "";
+        if (title) topicsArray.push([title, desc, title_en, desc_en]);
         delete data[k];
         delete data[`topic_desc_${idx}`];
+        delete data[`topic_title_en_${idx}`];
+        delete data[`topic_desc_en_${idx}`];
       });
       data.topics = topicsArray;
       const { error } = await db.from('panels').update(data).eq('id', form.dataset.editPanelForm);
