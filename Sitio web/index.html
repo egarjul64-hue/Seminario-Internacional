@@ -228,6 +228,12 @@
     <div id="detail-content"></div>
   </dialog>
 
+  <dialog id="success-modal" class="modal account-modal" style="text-align:center;">
+    <div style="margin-bottom:20px; font-size:3rem; color:var(--blue);">✓</div>
+    <div id="success-content" style="font-size:1.1rem; line-height:1.6; margin-bottom:30px;"></div>
+    <button class="button" type="button" onclick="document.getElementById('success-modal').close()">Cerrar</button>
+  </dialog>
+
   <dialog id="attendee-modal" class="modal account-modal">
     <button class="modal-close" type="button" data-close aria-label="Cerrar">×</button>
     <div class="modal-heading"><p class="eyebrow">Área privada</p><h2>Consulte su inscripción</h2><p>Introduzca el correo y el código entregado tras el registro.</p></div>
@@ -253,7 +259,7 @@
     </div>
     <div id="admin-dashboard" hidden>
       <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administración</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesión</button></div>
-      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Administradores</button></div>
+      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button></div>
       <div id="admin-activities"></div>
       <div id="admin-panels" hidden></div>
       <div id="admin-attendees" hidden></div>
