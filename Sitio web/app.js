@@ -267,7 +267,7 @@ function renderAdminAttendees(){
     <button class="button button-ghost" type="button" onclick="exportAttendeesToExcel()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a Excel</button>
     <button class="button button-ghost" type="button" onclick="exportAttendeesToPDF()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a PDF</button>
   </div>`;
-  const tableHtml = `<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`;
+  const tableHtml = `<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td><td data-label="Acciones"><button type="button" data-delete-attendee="${a.id}" style="color:#a42323; background:none; border:none; cursor:pointer; font-weight:bold;" aria-label="Borrar inscripción">Borrar</button></td></tr>`).join("")}</tbody></table>`;
   qs("#admin-attendees").innerHTML = buttonsHtml + tableHtml;
 }
 
@@ -439,24 +439,6 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
   }
 });
 
-qs("#admin-dashboard").addEventListener("change", async e=>{
-  if(!e.target.matches("[data-status]"))return;
-  if(db) {
-    const { error } = await db.from('attendees').update({ status: e.target.value }).eq('id', Number(e.target.dataset.status));
-    if (!error) {
-      await fetchAttendees();
-      showToast("Estado de inscripción actualizado.");
-    } else {
-      showToast("Error al actualizar el estado.");
-    }
-  }
-});
-
-qs("#admin-create-user")?.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const form = e.currentTarget;
-  const data = Object.fromEntries(new FormData(form));
-  if (!db) return;
   
   const { error } = await db.auth.signUp({
     email: data.email,
@@ -538,6 +520,36 @@ window.exportAttendeesToPDF = function() {
   if (panelRows.length === 0 && pubRows.length === 0) return showToast("No hay datos para exportar.");
   doc.save("Inscritos_Seminario.pdf");
 };
+
+qs("#admin-dashboard").addEventListener("change", async e=>{
+  if(!e.target.matches("[data-status]"))return;
+  if(db) {
+    const { error } = await db.from('attendees').update({ status: e.target.value }).eq('id', Number(e.target.dataset.status));
+    if (!error) {
+      await fetchAttendees();
+      showToast("Estado de inscripción actualizado.");
+    } else {
+      showToast("Error al actualizar el estado.");
+    }
+  }
+});
+
+qs("#admin-dashboard").addEventListener("click", async e=>{
+  const delBtn = e.target.closest("[data-delete-attendee]");
+  if (delBtn) {
+    if(!confirm("¿Seguro que quieres borrar este registro de inscripción de forma permanente?")) return;
+    if(db) {
+      const { error } = await db.from('attendees').delete().eq('id', Number(delBtn.dataset.deleteAttendee));
+      if (!error) {
+        await fetchAttendees();
+        renderAdminAttendees();
+        showToast("Registro borrado correctamente.");
+      } else {
+        showToast("Error al borrar el registro.");
+      }
+    }
+  }
+});
 
 qs("#admin-create-user")?.addEventListener("submit", async e=>{
   e.preventDefault();
