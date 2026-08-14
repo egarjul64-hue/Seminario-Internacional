@@ -439,20 +439,6 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
   }
 });
 
-  
-  const { error } = await db.auth.signUp({
-    email: data.email,
-    password: data.password
-  });
-
-  if (error) {
-    showToast("Error al crear administrador: " + error.message);
-  } else {
-    showToast("Administrador creado correctamente.");
-    form.reset();
-  }
-});
-
 async function init() {
   await Promise.all([fetchSchedule(), fetchPanels()]);
   renderSchedule();
