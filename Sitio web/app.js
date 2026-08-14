@@ -571,7 +571,7 @@ qs("#admin-create-user")?.addEventListener("submit", async e=>{
   }
   
   btn.disabled = false;
-  btn.textContent = "Crear Administrador";
+  btn.textContent = "Crear Editor";
 });
 
 async function fetchEditors() {
