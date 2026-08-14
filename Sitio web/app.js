@@ -327,7 +327,7 @@ qs("#admin-login").addEventListener("submit", async e=>{
   const data=Object.fromEntries(new FormData(e.currentTarget));
   if (!db) return;
   
-  const { error } = await db.auth.signInWithPassword({
+  const { data: authData, error } = await db.auth.signInWithPassword({
     email: data.username, 
     password: data.password
   });
@@ -335,6 +335,24 @@ qs("#admin-login").addEventListener("submit", async e=>{
   if (error) {
     qs(".form-message",e.currentTarget).textContent="Credenciales incorrectas.";
   } else {
+    const email = authData.user.email.toLowerCase();
+    let isAllowed = false;
+    
+    if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      isAllowed = true;
+    } else {
+      const { data: editorData, error: editorError } = await db.from('editors').select('*').eq('email', email).single();
+      if (editorData && !editorError) {
+        isAllowed = true;
+      }
+    }
+    
+    if (!isAllowed) {
+      await db.auth.signOut();
+      qs(".form-message",e.currentTarget).textContent="No tienes permisos de administrador.";
+      return;
+    }
+
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
     qs("#admin-dashboard").hidden=false;
@@ -342,8 +360,9 @@ qs("#admin-login").addEventListener("submit", async e=>{
     // Check super admin for users tab
     const usersTab = qs('[data-admin-tab="users"]');
     if (usersTab) {
-      if (data.user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
         usersTab.style.display = "";
+        fetchEditors();
       } else {
         usersTab.style.display = "none";
       }
@@ -519,5 +538,72 @@ window.exportAttendeesToPDF = function() {
   if (panelRows.length === 0 && pubRows.length === 0) return showToast("No hay datos para exportar.");
   doc.save("Inscritos_Seminario.pdf");
 };
+
+qs("#admin-create-user")?.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const form = e.currentTarget;
+  const formData = Object.fromEntries(new FormData(form));
+  const btn = qs("button[type='submit']", form);
+  
+  if (!db) return;
+  btn.disabled = true;
+  btn.textContent = "Creando...";
+  
+  // Create temp client to avoid logging out current admin
+  const tempDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await tempDb.auth.signUp({
+    email: formData.email.trim(),
+    password: formData.password
+  });
+
+  const { error: dbError } = await db.from('editors').insert([{ email: formData.email.trim() }]);
+  
+  if (dbError) {
+    if (dbError.code === '23505') {
+      showToast("Este usuario ya es editor.");
+    } else {
+      showToast("Error al dar permisos de editor.");
+    }
+  } else {
+    showToast("Editor creado correctamente.");
+    form.reset();
+    fetchEditors();
+  }
+  
+  btn.disabled = false;
+  btn.textContent = "Crear Administrador";
+});
+
+async function fetchEditors() {
+  if (!db) return;
+  const { data, error } = await db.from('editors').select('*').order('created_at', { ascending: false });
+  if (!error && data) {
+    const list = qs("#editors-list");
+    if (data.length === 0) {
+      list.innerHTML = `<p class="empty-state">No hay editores adicionales.</p>`;
+      return;
+    }
+    list.innerHTML = data.map(e => `
+      <div class="admin-row" style="margin-bottom:8px;">
+        <div style="grid-column:1/3;"><strong>${escapeHTML(e.email)}</strong></div>
+        <button type="button" style="color:#a42323; background:#fae7e7;" data-revoke="${e.id}">Revocar</button>
+      </div>
+    `).join("");
+  }
+}
+
+qs("#editors-list")?.addEventListener("click", async e => {
+  if (e.target.matches("button[data-revoke]")) {
+    const id = e.target.dataset.revoke;
+    if(!confirm("¿Seguro que quieres revocar el acceso a este editor? Su cuenta quedará inhabilitada para acceder al panel.")) return;
+    const { error } = await db.from('editors').delete().eq('id', id);
+    if (!error) {
+      showToast("Acceso revocado.");
+      fetchEditors();
+    } else {
+      showToast("Error al revocar acceso.");
+    }
+  }
+});
 
 init();
