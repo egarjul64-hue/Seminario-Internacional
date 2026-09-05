@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co;">
   <meta name="description" content="Seminario Internacional del Ejército del Aire y del Espacio sobre el dominio operacional del ciberespacio y el poder aeroespacial.">
   <meta name="theme-color" content="#061d3d">
   <title>Seminario Internacional EA · Ciberespacio y Poder Aeroespacial</title>
@@ -132,7 +133,7 @@
           <p>Madrid · España</p>
           <p class="venue-note">El acceso estará sujeto a acreditación previa. Las instrucciones de llegada y seguridad se comunicarán a las personas autorizadas.</p>
         </div>
-        <div class="venue-coordinates" aria-hidden="true"><span>40°25′56″ N</span><i></i><span>3°43′06″ O</span></div>
+        <img src="assets/sede.jpg" alt="Cuartel General del Ejército del Aire y del Espacio" class="venue-image">
       </div>
     </section>
 
@@ -200,6 +201,7 @@
               <label class="consent"><input type="checkbox" name="activity_p3" value="Yes"><span><strong>12 NOV</strong> · <span>Panel 3: Cultura, organización y talento</span></span></label>
               <label class="consent"><input type="checkbox" name="activity_p4" value="Yes"><span><strong>13 NOV</strong> · <span>Panel 4: Ciberoperaciones en conflictos actuales</span></span></label>
               <label class="consent"><input type="checkbox" name="activity_p5" value="Yes"><span><strong>13 NOV</strong> · <span>Panel 5: Transformación e interoperabilidad</span></span></label>
+              <label class="consent"><input type="checkbox" name="activity_close" value="Yes"><span><strong>13 NOV</strong> · <span>Conclusiones y clausura institucional</span></span></label>
             </div>
           </div>
 
@@ -227,6 +229,12 @@
     <div id="detail-content"></div>
   </dialog>
 
+  <dialog id="success-modal" class="modal account-modal" style="text-align:center;">
+    <div style="margin-bottom:20px; font-size:3rem; color:var(--blue);">✓</div>
+    <div id="success-content" style="font-size:1.1rem; line-height:1.6; margin-bottom:30px;"></div>
+    <button class="button" type="button" onclick="document.getElementById('success-modal').close()">Cerrar</button>
+  </dialog>
+
   <dialog id="attendee-modal" class="modal account-modal">
     <button class="modal-close" type="button" data-close aria-label="Cerrar">×</button>
     <div class="modal-heading"><p class="eyebrow">Área privada</p><h2>Consulte su inscripción</h2><p>Introduzca el correo y el código entregado tras el registro.</p></div>
@@ -250,35 +258,14 @@
         <p class="form-message" aria-live="polite"></p>
       </form>
     </div>
-    <div id="admin-dashboard" hidden>
-      <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administración</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesión</button></div>
-      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Administradores</button></div>
-      <div id="admin-activities"></div>
-      <div id="admin-panels" hidden></div>
-      <div id="admin-attendees" hidden></div>
-      <div id="admin-users" hidden>
-        <div class="admin-list" style="padding:20px;">
-          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
-              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Nuevo Administrador</h3>
-              <p style="margin:0;color:#556270;font-size:0.9em;">Añadir un nuevo usuario con permisos de acceso a este panel.</p>
-            </div>
-            <form id="admin-create-user" class="stack-form" style="max-width:400px;">
-              <label>Correo electrónico<input name="email" type="email" autocomplete="off" required></label>
-              <label>Palabra clave (mín. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
-              <button class="button button-gold" type="submit" style="margin-top:8px;">Crear Administrador</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div id="admin-dashboard-container" hidden></div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" integrity="sha384-EyR2P0dlmjnEGcm9xcjdAn0VedZpRHEwDLP9oSS6wYMvzHBHkUrvgonveazJ/sSx" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-0LfAeVRtfSxaYzh7BkRqIwX964fc7QJyp+CCC1OLpZggMkmfKFbAE1Bh60RBZ5gk" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js" integrity="sha384-vxxMdt1K6XlME6zkLsgFrrHIeC7XIdAo1GW/uhhObjJXnymxiIi/eoMXsKJA13ZJ" crossorigin="anonymous"></script>
   <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>

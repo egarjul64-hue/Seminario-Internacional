@@ -1,3 +1,34 @@
+const getAdminDashboardHTML = () => \
+      <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administraci�n</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesi�n</button></div>
+      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Editores</button></div>
+      <div id="admin-activities"></div>
+      <div id="admin-panels" hidden></div>
+      <div id="admin-attendees" hidden></div>
+      <div id="admin-users" hidden>
+        <div class="admin-list" style="padding:20px;">
+          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05); margin-bottom:24px;">
+            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Nuevo Editor</h3>
+              <p style="margin:0;color:#556270;font-size:0.9em;">A�adir un nuevo editor con permisos de acceso a este panel.</p>
+            </div>
+            <form id="admin-create-user" class="stack-form" style="max-width:400px;">
+              <label>Correo electr�nico<input name="email" type="email" autocomplete="off" required></label>
+              <label>Palabra clave (m�n. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+              <button class="button button-gold" type="submit" style="margin-top:8px;">Crear Editor</button>
+            </form>
+          </div>
+          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Editores Actuales</h3>
+              <p style="margin:0;color:#556270;font-size:0.9em;">Lista de correos con acceso al panel. El S�per Administrador no aparece en esta lista.</p>
+            </div>
+            <div id="editors-list">
+              <!-- Se poblar� desde JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+\;
 "use strict";
 
 const SUPABASE_URL = "https://ylkimxuygknonlfalcxl.supabase.co";
@@ -31,7 +62,6 @@ const store = {
   panels: [],
   attendees: []
 };
-const SUPER_ADMIN_EMAIL = "egjulian@hotmail.com"; // Cambia esto por tu correo real de administrador
 
 const escapeHTML = value => String(value ?? "").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const qs=(s,c=document)=>c.querySelector(s);const qsa=(s,c=document)=>[...c.querySelectorAll(s)];
@@ -95,7 +125,12 @@ function openPanel(id) {
   qs("#detail-modal").showModal();
 }
 function showToast(message){const toast=qs("#toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),4200)}
-function generateCode(){return "EA26-"+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6).padStart(6,"0")}
+function generateCode(){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const array = new Uint8Array(12);
+  crypto.getRandomValues(array);
+  return "EA26-" + Array.from(array).map(b => chars[b % chars.length]).join('');
+}
 
 async function register(form){
   const data=Object.fromEntries(new FormData(form));
@@ -147,7 +182,11 @@ async function register(form){
     form.reset();
     qs("#section-panel").hidden = true;
     qs("#section-public").hidden = true;
-    showToast(`Solicitud registrada. Guarde su código de acceso: ${code}`);
+      
+    const successContent = `<strong>${escapeHTML(attendee.name)}</strong>, su solicitud ha sido registrada y será procesada internamente a la menor brevedad.<br><br>Anote el siguiente código <strong>${code}</strong> e ingrese más tarde para ver su estado de admisión.`;
+    qs("#success-content").innerHTML = successContent;
+    qs("#success-modal").showModal();
+      
     if(adminAuthenticated) {
       await fetchAttendees();
       renderAdminAttendees();
@@ -212,7 +251,7 @@ async function openAdmin(){
   }
   
   qs("#admin-login-view").hidden=adminAuthenticated;
-  qs("#admin-dashboard").hidden=!adminAuthenticated;
+  qs("#admin-dashboard-container").hidden=!adminAuthenticated;
   if(adminAuthenticated){
     await fetchAttendees();
     renderAdminActivities();
@@ -263,7 +302,7 @@ function renderAdminAttendees(){
     <button class="button button-ghost" type="button" onclick="exportAttendeesToExcel()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a Excel</button>
     <button class="button button-ghost" type="button" onclick="exportAttendeesToPDF()" style="padding:8px 16px; font-size:14px; color:var(--blue); border-color:var(--blue);">Exportar a PDF</button>
   </div>`;
-  const tableHtml = `<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td></tr>`).join("")}</tbody></table>`;
+  const tableHtml = `<table class="attendee-table"><thead><tr><th>Asistente</th><th>Organismo / cargo</th><th>Modalidad</th><th>Contacto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${data.map(a=>`<tr><td data-label="Asistente"><strong>${escapeHTML(a.name)}</strong><br><small>${escapeHTML(a.code)}</small></td><td data-label="Organismo">${escapeHTML(a.organization)}<br><small>${escapeHTML(a.role)}</small></td><td data-label="Modalidad">${a.attendance_type==="panel"?"Participante":"Público"}<br><small><a href="#" data-details="${a.id}" style="color:var(--blue);text-decoration:underline;">Ver detalles</a></small></td><td data-label="Contacto">${escapeHTML(a.email)}<br>${escapeHTML(a.phone)}</td><td data-label="Estado"><select data-status="${a.id}" aria-label="Estado de ${escapeHTML(a.name)}"><option value="En proceso"${a.status==="En proceso"?" selected":""}>En proceso</option><option value="Autorizada"${a.status==="Autorizada"?" selected":""}>Autorizada</option><option value="Denegada"${a.status==="Denegada"?" selected":""}>Denegada</option></select></td><td data-label="Acciones"><button type="button" data-delete-attendee="${a.id}" style="color:#a42323; background:none; border:none; cursor:pointer; font-weight:bold;" aria-label="Borrar inscripción">Borrar</button></td></tr>`).join("")}</tbody></table>`;
   qs("#admin-attendees").innerHTML = buttonsHtml + tableHtml;
 }
 
@@ -323,7 +362,7 @@ qs("#admin-login").addEventListener("submit", async e=>{
   const data=Object.fromEntries(new FormData(e.currentTarget));
   if (!db) return;
   
-  const { error } = await db.auth.signInWithPassword({
+  const { data: authData, error } = await db.auth.signInWithPassword({
     email: data.username, 
     password: data.password
   });
@@ -331,18 +370,24 @@ qs("#admin-login").addEventListener("submit", async e=>{
   if (error) {
     qs(".form-message",e.currentTarget).textContent="Credenciales incorrectas.";
   } else {
+    const email = authData.user.email.toLowerCase();
+    
+    const { data: editorData, error: editorError } = await db.from('editors').select('*').eq('email', email).single();
+    
+    if (editorError || !editorData) {
+      await db.auth.signOut();
+      qs(".form-message",e.currentTarget).textContent="No tienes permisos de administrador.";
+      return;
+    }
+
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
-    qs("#admin-dashboard").hidden=false;
+    qs("#admin-dashboard-container").hidden=false;
     
-    // Check super admin for users tab
     const usersTab = qs('[data-admin-tab="users"]');
     if (usersTab) {
-      if (data.user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
-        usersTab.style.display = "";
-      } else {
-        usersTab.style.display = "none";
-      }
+      usersTab.style.display = "";
+      fetchEditors();
     }
 
     await fetchAttendees();
@@ -352,21 +397,21 @@ qs("#admin-login").addEventListener("submit", async e=>{
   }
 });
 
-qs("#admin-logout").addEventListener("click", async ()=>{
+document.addEventListener("click", async e => { if(e.target.matches("#admin-logout")){
   if(db) await db.auth.signOut();
   adminAuthenticated=false;
-  qs("#admin-dashboard").hidden=true;
+  qs("#admin-dashboard-container").hidden=true;
   qs("#admin-login-view").hidden=false;
   qs("#admin-login").reset();
-});
+}});
 
-qs("#admin-dashboard").addEventListener("click",e=>{
+qs("#admin-dashboard-container").addEventListener("click",e=>{
   const edit=e.target.closest("[data-edit]");if(edit){const form=qs(`[data-edit-form="${CSS.escape(edit.dataset.edit)}"]`);form.hidden=!form.hidden}
   const editPanel=e.target.closest("[data-edit-panel]");if(editPanel){const form=qs(`[data-edit-panel-form="${CSS.escape(editPanel.dataset.editPanel)}"]`);form.hidden=!form.hidden}
   const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-panels").hidden=tab.dataset.adminTab!=="panels";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees";qs("#admin-users").hidden=tab.dataset.adminTab!=="users"}
 });
 
-qs("#admin-dashboard").addEventListener("submit", async e=>{
+qs("#admin-dashboard-container").addEventListener("submit", async e=>{
   const form=e.target.closest("form");
   if(!form)return;
   e.preventDefault();
@@ -413,38 +458,6 @@ qs("#admin-dashboard").addEventListener("submit", async e=>{
         showToast("Error al actualizar el panel.");
       }
     }
-  }
-});
-
-qs("#admin-dashboard").addEventListener("change", async e=>{
-  if(!e.target.matches("[data-status]"))return;
-  if(db) {
-    const { error } = await db.from('attendees').update({ status: e.target.value }).eq('id', Number(e.target.dataset.status));
-    if (!error) {
-      await fetchAttendees();
-      showToast("Estado de inscripción actualizado.");
-    } else {
-      showToast("Error al actualizar el estado.");
-    }
-  }
-});
-
-qs("#admin-create-user")?.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const form = e.currentTarget;
-  const data = Object.fromEntries(new FormData(form));
-  if (!db) return;
-  
-  const { error } = await db.auth.signUp({
-    email: data.email,
-    password: data.password
-  });
-
-  if (error) {
-    showToast("Error al crear administrador: " + error.message);
-  } else {
-    showToast("Administrador creado correctamente.");
-    form.reset();
   }
 });
 
@@ -516,4 +529,103 @@ window.exportAttendeesToPDF = function() {
   doc.save("Inscritos_Seminario.pdf");
 };
 
+qs("#admin-dashboard-container").addEventListener("change", async e=>{
+  if(!e.target.matches("[data-status]"))return;
+  if(db) {
+    const { error } = await db.from('attendees').update({ status: e.target.value }).eq('id', Number(e.target.dataset.status));
+    if (!error) {
+      await fetchAttendees();
+      showToast("Estado de inscripción actualizado.");
+    } else {
+      showToast("Error al actualizar el estado.");
+    }
+  }
+});
+
+qs("#admin-dashboard-container").addEventListener("click", async e=>{
+  const delBtn = e.target.closest("[data-delete-attendee]");
+  if (delBtn) {
+    if(!confirm("¿Seguro que quieres borrar este registro de inscripción de forma permanente?")) return;
+    if(db) {
+      const { error } = await db.from('attendees').delete().eq('id', Number(delBtn.dataset.deleteAttendee));
+      if (!error) {
+        await fetchAttendees();
+        renderAdminAttendees();
+        showToast("Registro borrado correctamente.");
+      } else {
+        showToast("Error al borrar el registro.");
+      }
+    }
+  }
+});
+
+qs("#admin-dashboard-container").addEventListener("submit", async e=>{ if(e.target.matches("#admin-create-user")){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const formData = Object.fromEntries(new FormData(form));
+  const btn = qs("button[type='submit']", form);
+  
+  if (!db) return;
+  btn.disabled = true;
+  btn.textContent = "Creando...";
+  
+  }
+  // Create temp client to avoid logging out current admin
+  const tempDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await tempDb.auth.signUp({
+    email: formData.email.trim(),
+    password: formData.password
+  });
+
+  const { error: dbError } = await db.from('editors').insert([{ email: formData.email.trim() }]);
+  
+  if (dbError) {
+    if (dbError.code === '23505') {
+      showToast("Este usuario ya es editor.");
+    } else {
+      showToast("Error al dar permisos de editor.");
+    }
+  } else {
+    showToast("Editor creado correctamente.");
+    form.reset();
+    fetchEditors();
+  }
+  
+  btn.disabled = false;
+  btn.textContent = "Crear Editor";
+});
+
+async function fetchEditors() {
+  if (!db) return;
+  const { data, error } = await db.from('editors').select('*').order('created_at', { ascending: false });
+  if (!error && data) {
+    const list = qs("#editors-list");
+    if (data.length === 0) {
+      list.innerHTML = `<p class="empty-state">No hay editores adicionales.</p>`;
+      return;
+    }
+    list.innerHTML = data.map(e => `
+      <div class="admin-row" style="margin-bottom:8px;">
+        <div style="grid-column:1/3;"><strong>${escapeHTML(e.email)}</strong></div>
+        <button type="button" style="color:#a42323; background:#fae7e7;" data-revoke="${e.id}">Revocar</button>
+      </div>
+    `).join("");
+  }
+}
+
+qs("#editors-list")?.addEventListener("click", async e => {
+  if (e.target.matches("button[data-revoke]")) {
+    const id = e.target.dataset.revoke;
+    if(!confirm("¿Seguro que quieres revocar el acceso a este editor? Su cuenta quedará inhabilitada para acceder al panel.")) return;
+    const { error } = await db.from('editors').delete().eq('id', id);
+    if (!error) {
+      showToast("Acceso revocado.");
+      fetchEditors();
+    } else {
+      showToast("Error al revocar acceso.");
+    }
+  }
+});
+
 init();
+
