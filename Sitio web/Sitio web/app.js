@@ -1,4 +1,4 @@
-const getAdminDashboardHTML = () => \
+const getAdminDashboardHTML = () => `
       <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administraci�n</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesi�n</button></div>
       <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Editores</button></div>
       <div id="admin-activities"></div>
@@ -28,7 +28,7 @@ const getAdminDashboardHTML = () => \
           </div>
         </div>
       </div>
-\;
+`;
 "use strict";
 
 const SUPABASE_URL = "https://ylkimxuygknonlfalcxl.supabase.co";
