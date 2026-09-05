@@ -159,39 +159,8 @@
             <label>Teléfono<input name="phone" type="tel" autocomplete="tel" required></label>
           </div>
           
-          <h3 class="form-section-title" style="margin-top:20px;">Modalidad de Asistencia</h3>
-          <div class="field-row" style="margin-bottom:15px;">
-            <label class="consent"><input type="radio" name="attendance_type" value="panel" required><span>Participante en los paneles</span></label>
-            <label class="consent"><input type="radio" name="attendance_type" value="public" required><span>Público general</span></label>
-          </div>
-
-          <!-- Section for Panel Participants -->
-          <div class="conditional-section" id="section-panel" hidden style="background:var(--paper);padding:20px;margin-bottom:20px;border-radius:4px;">
-            <h3 class="form-section-title" style="margin-top:0;">Detalles para Participantes</h3>
-            <div class="field-row">
-              <label>Empleo / Rango<input name="rank"></label>
-              <label>DNI / Pasaporte<input name="passport"></label>
-            </div>
-            <div class="field-row">
-              <label>Fecha y hora de llegada (DTG)<input name="arrival_dtg" type="datetime-local"></label>
-              <label>Fecha y hora de salida (DTG)<input name="departure_dtg" type="datetime-local"></label>
-            </div>
-            <label class="consent" style="margin-bottom:20px;"><input type="checkbox" name="lodging" value="Yes"><span>Se alojará en la residencia militar recomendada</span></label>
-            <label style="margin-bottom:20px;">Alergias o condiciones particulares<input name="allergies"></label>
-            <div class="field-row">
-              <label>Visita programa social
-                <select name="visit" style="width:100%;border:1px solid #c8d0da;background:#fff;padding:12px;color:var(--ink);outline:none;">
-                  <option value="">Seleccionar...</option>
-                  <option value="Yes">Sí</option>
-                  <option value="No">No</option>
-                </select>
-              </label>
-              <label>Acompañante<input name="companion"></label>
-            </div>
-          </div>
-
           <!-- Section for General Public -->
-          <div class="conditional-section" id="section-public" hidden style="background:var(--paper);padding:20px;margin-bottom:20px;border-radius:4px;">
+          <div class="conditional-section" id="section-public" style="background:var(--paper);padding:20px;margin-bottom:20px;border-radius:4px;">
             <h3 class="form-section-title" style="margin-top:0;">Asistencia a Actividades</h3>
             <p class="form-note" style="margin-top:0;margin-bottom:15px;">Indique a qué actividades tiene previsto asistir:</p>
             <div style="display:grid;gap:12px;">
