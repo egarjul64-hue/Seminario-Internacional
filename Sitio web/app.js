@@ -1,3 +1,34 @@
+const getAdminDashboardHTML = () => \
+      <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administraci�n</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesi�n</button></div>
+      <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Editores</button></div>
+      <div id="admin-activities"></div>
+      <div id="admin-panels" hidden></div>
+      <div id="admin-attendees" hidden></div>
+      <div id="admin-users" hidden>
+        <div class="admin-list" style="padding:20px;">
+          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05); margin-bottom:24px;">
+            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Nuevo Editor</h3>
+              <p style="margin:0;color:#556270;font-size:0.9em;">A�adir un nuevo editor con permisos de acceso a este panel.</p>
+            </div>
+            <form id="admin-create-user" class="stack-form" style="max-width:400px;">
+              <label>Correo electr�nico<input name="email" type="email" autocomplete="off" required></label>
+              <label>Palabra clave (m�n. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+              <button class="button button-gold" type="submit" style="margin-top:8px;">Crear Editor</button>
+            </form>
+          </div>
+          <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+            <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
+              <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Editores Actuales</h3>
+              <p style="margin:0;color:#556270;font-size:0.9em;">Lista de correos con acceso al panel. El S�per Administrador no aparece en esta lista.</p>
+            </div>
+            <div id="editors-list">
+              <!-- Se poblar� desde JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+\;
 "use strict";
 
 const SUPABASE_URL = "https://ylkimxuygknonlfalcxl.supabase.co";
@@ -31,7 +62,6 @@ const store = {
   panels: [],
   attendees: []
 };
-const SUPER_ADMIN_EMAIL = "egjulian@hotmail.com"; // Cambia esto por tu correo real de administrador
 
 const escapeHTML = value => String(value ?? "").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const qs=(s,c=document)=>c.querySelector(s);const qsa=(s,c=document)=>[...c.querySelectorAll(s)];
@@ -95,7 +125,12 @@ function openPanel(id) {
   qs("#detail-modal").showModal();
 }
 function showToast(message){const toast=qs("#toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),4200)}
-function generateCode(){return "EA26-"+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6).padStart(6,"0")}
+function generateCode(){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const array = new Uint8Array(12);
+  crypto.getRandomValues(array);
+  return "EA26-" + Array.from(array).map(b => chars[b % chars.length]).join('');
+}
 
 async function register(form){
   const data=Object.fromEntries(new FormData(form));
@@ -216,7 +251,7 @@ async function openAdmin(){
   }
   
   qs("#admin-login-view").hidden=adminAuthenticated;
-  qs("#admin-dashboard").hidden=!adminAuthenticated;
+  qs("#admin-dashboard-container").hidden=!adminAuthenticated;
   if(adminAuthenticated){
     await fetchAttendees();
     renderAdminActivities();
@@ -336,18 +371,10 @@ qs("#admin-login").addEventListener("submit", async e=>{
     qs(".form-message",e.currentTarget).textContent="Credenciales incorrectas.";
   } else {
     const email = authData.user.email.toLowerCase();
-    let isAllowed = false;
     
-    if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
-      isAllowed = true;
-    } else {
-      const { data: editorData, error: editorError } = await db.from('editors').select('*').eq('email', email).single();
-      if (editorData && !editorError) {
-        isAllowed = true;
-      }
-    }
+    const { data: editorData, error: editorError } = await db.from('editors').select('*').eq('email', email).single();
     
-    if (!isAllowed) {
+    if (editorError || !editorData) {
       await db.auth.signOut();
       qs(".form-message",e.currentTarget).textContent="No tienes permisos de administrador.";
       return;
@@ -355,17 +382,12 @@ qs("#admin-login").addEventListener("submit", async e=>{
 
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
-    qs("#admin-dashboard").hidden=false;
+    qs("#admin-dashboard-container").hidden=false;
     
-    // Check super admin for users tab
     const usersTab = qs('[data-admin-tab="users"]');
     if (usersTab) {
-      if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
-        usersTab.style.display = "";
-        fetchEditors();
-      } else {
-        usersTab.style.display = "none";
-      }
+      usersTab.style.display = "";
+      fetchEditors();
     }
 
     await fetchAttendees();
@@ -375,21 +397,21 @@ qs("#admin-login").addEventListener("submit", async e=>{
   }
 });
 
-qs("#admin-logout").addEventListener("click", async ()=>{
+document.addEventListener("click", async e => { if(e.target.matches("#admin-logout")){
   if(db) await db.auth.signOut();
   adminAuthenticated=false;
-  qs("#admin-dashboard").hidden=true;
+  qs("#admin-dashboard-container").hidden=true;
   qs("#admin-login-view").hidden=false;
   qs("#admin-login").reset();
-});
+}});
 
-qs("#admin-dashboard").addEventListener("click",e=>{
+qs("#admin-dashboard-container").addEventListener("click",e=>{
   const edit=e.target.closest("[data-edit]");if(edit){const form=qs(`[data-edit-form="${CSS.escape(edit.dataset.edit)}"]`);form.hidden=!form.hidden}
   const editPanel=e.target.closest("[data-edit-panel]");if(editPanel){const form=qs(`[data-edit-panel-form="${CSS.escape(editPanel.dataset.editPanel)}"]`);form.hidden=!form.hidden}
   const tab=e.target.closest("[data-admin-tab]");if(tab){qsa("[data-admin-tab]").forEach(b=>b.classList.toggle("active",b===tab));qs("#admin-activities").hidden=tab.dataset.adminTab!=="activities";qs("#admin-panels").hidden=tab.dataset.adminTab!=="panels";qs("#admin-attendees").hidden=tab.dataset.adminTab!=="attendees";qs("#admin-users").hidden=tab.dataset.adminTab!=="users"}
 });
 
-qs("#admin-dashboard").addEventListener("submit", async e=>{
+qs("#admin-dashboard-container").addEventListener("submit", async e=>{
   const form=e.target.closest("form");
   if(!form)return;
   e.preventDefault();
@@ -507,7 +529,7 @@ window.exportAttendeesToPDF = function() {
   doc.save("Inscritos_Seminario.pdf");
 };
 
-qs("#admin-dashboard").addEventListener("change", async e=>{
+qs("#admin-dashboard-container").addEventListener("change", async e=>{
   if(!e.target.matches("[data-status]"))return;
   if(db) {
     const { error } = await db.from('attendees').update({ status: e.target.value }).eq('id', Number(e.target.dataset.status));
@@ -520,7 +542,7 @@ qs("#admin-dashboard").addEventListener("change", async e=>{
   }
 });
 
-qs("#admin-dashboard").addEventListener("click", async e=>{
+qs("#admin-dashboard-container").addEventListener("click", async e=>{
   const delBtn = e.target.closest("[data-delete-attendee]");
   if (delBtn) {
     if(!confirm("¿Seguro que quieres borrar este registro de inscripción de forma permanente?")) return;
@@ -537,7 +559,7 @@ qs("#admin-dashboard").addEventListener("click", async e=>{
   }
 });
 
-qs("#admin-create-user")?.addEventListener("submit", async e=>{
+qs("#admin-dashboard-container").addEventListener("submit", async e=>{ if(e.target.matches("#admin-create-user")){
   e.preventDefault();
   const form = e.currentTarget;
   const formData = Object.fromEntries(new FormData(form));
@@ -547,6 +569,7 @@ qs("#admin-create-user")?.addEventListener("submit", async e=>{
   btn.disabled = true;
   btn.textContent = "Creando...";
   
+  }
   // Create temp client to avoid logging out current admin
   const tempDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await tempDb.auth.signUp({
@@ -605,3 +628,4 @@ qs("#editors-list")?.addEventListener("click", async e => {
 });
 
 init();
+
