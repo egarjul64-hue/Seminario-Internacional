@@ -251,6 +251,9 @@ async function openAdmin(){
   }
   
   qs("#admin-login-view").hidden=adminAuthenticated;
+  if (adminAuthenticated && !qs("#admin-logout")) {
+    qs("#admin-dashboard-container").innerHTML = getAdminDashboardHTML();
+  }
   qs("#admin-dashboard-container").hidden=!adminAuthenticated;
   if(adminAuthenticated){
     await fetchAttendees();
@@ -382,6 +385,9 @@ qs("#admin-login").addEventListener("submit", async e=>{
 
     adminAuthenticated = true;
     qs("#admin-login-view").hidden=true;
+    if (!qs("#admin-logout")) {
+      qs("#admin-dashboard-container").innerHTML = getAdminDashboardHTML();
+    }
     qs("#admin-dashboard-container").hidden=false;
     
     const usersTab = qs('[data-admin-tab="users"]');
