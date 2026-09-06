@@ -1,5 +1,5 @@
 const getAdminDashboardHTML = () => `
-      <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administraci�n</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesi�n</button></div>
+      <div class="modal-heading admin-heading"><div><p class="eyebrow">Panel de control</p><h2>Administración</h2></div><button class="text-button dark" id="admin-logout" type="button">Cerrar sesión</button></div>
       <div class="admin-tabs"><button class="active" type="button" data-admin-tab="activities">Programa</button><button type="button" data-admin-tab="panels">Paneles</button><button type="button" data-admin-tab="attendees">Inscritos <span id="attendee-count">0</span></button><button type="button" data-admin-tab="users">Editores</button></div>
       <div id="admin-activities"></div>
       <div id="admin-panels" hidden></div>
@@ -9,21 +9,21 @@ const getAdminDashboardHTML = () => `
           <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05); margin-bottom:24px;">
             <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
               <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Nuevo Editor</h3>
-              <p style="margin:0;color:#556270;font-size:0.9em;">A�adir un nuevo editor con permisos de acceso a este panel.</p>
+              <p style="margin:0;color:#556270;font-size:0.9em;">Añadir un nuevo editor con permisos de acceso a este panel.</p>
             </div>
             <form id="admin-create-user" class="stack-form" style="max-width:400px;">
-              <label>Correo electr�nico<input name="email" type="email" autocomplete="off" required></label>
-              <label>Palabra clave (m�n. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+              <label>Correo electrónico<input name="email" type="email" autocomplete="off" required></label>
+              <label>Palabra clave (mín. 6 caracteres)<input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
               <button class="button button-gold" type="submit" style="margin-top:8px;">Crear Editor</button>
             </form>
           </div>
           <div style="background:var(--paper);border-radius:4px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
             <div style="margin-bottom:24px;border-bottom:1px solid #c8d0da;padding-bottom:16px;">
               <h3 style="margin:0 0 4px 0;font-size:1.1rem;">Editores Actuales</h3>
-              <p style="margin:0;color:#556270;font-size:0.9em;">Lista de correos con acceso al panel. El S�per Administrador no aparece en esta lista.</p>
+              <p style="margin:0;color:#556270;font-size:0.9em;">Lista de correos con acceso al panel. El Súper Administrador no aparece en esta lista.</p>
             </div>
             <div id="editors-list">
-              <!-- Se poblar� desde JS -->
+              <!-- Se poblará desde JS -->
             </div>
           </div>
         </div>
